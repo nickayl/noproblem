@@ -8,7 +8,6 @@ import java.net.URL
 
 interface Problem {
 
-
     val provider: JsonProvider
     val details: String
     val title: String
