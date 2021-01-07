@@ -1,28 +1,26 @@
-package javax.rfc7807
+package javax.rfc7807.impl
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import javax.rfc7807.api.*
 
 class JacksonProvider : JsonProvider {
-
-    private val mapper: ObjectMapper = ObjectMapper()
-
-    override fun initialize() {
-        TODO("Not yet implemented")
-    }
-
-    override fun fromJson(json: JsonValue) {
-        TODO("Not yet implemented")
-    }
 
     override fun toJsonString(problem: Problem): String {
         TODO("Not yet implemented")
     }
 
-    override fun toJsonValue(problem: Problem): String {
+    override fun toJsonObject(problem: Problem): JsonObject {
         TODO("Not yet implemented")
     }
 
-    override fun fromJson(json: String) {
+    override fun fromJson(str: String): Problem {
+        TODO("Not yet implemented")
+    }
+
+    override fun <T> fromJson(json: String, klass: Class<T>): T {
+        TODO("Not yet implemented")
+    }
+
+    override fun <T> fromJson(json: GsonJsonValue, klass: Class<T>): T {
         TODO("Not yet implemented")
     }
 }

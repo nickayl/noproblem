@@ -1,11 +1,12 @@
-package javax.rfc7807
+package javax.rfc7807.impl
 
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.net.URI
 import java.net.URL
 
-val log: Logger = LoggerFactory.getLogger(Problem::class.java)
+import javax.rfc7807.api.JsonProvider
+import javax.rfc7807.api.JsonValue
+import javax.rfc7807.api.Problem
+
 
 internal class ProblemReferenceImplementation(
     override val provider: JsonProvider,
@@ -14,17 +15,18 @@ internal class ProblemReferenceImplementation(
     override val instance: URI
 ) : Problem {
 
-
     override val customValues: MutableList<Pair<String, JsonValue>> = mutableListOf()
     override var type: URL? = null
 
     override fun builder(provider: JsonProvider): Problem.Builder = Builder(provider)
     override fun builder(): Problem.Builder = Builder(this.provider)
 
-    internal class Builder(private val provider: JsonProvider) : Problem.Builder(provider) {
+    internal class Builder(private val provider: JsonProvider) : Problem.Builder() {
 
         override fun build(): Problem {
-            return ProblemReferenceImplementation(provider, title, details, instance)
+            return ProblemReferenceImplementation(provider, title ?: "",
+                details ?: "",
+                instance ?: URI(""))
                 .apply {
                     this.type = super.type;
                     this.customValues.addAll(customValues)
@@ -33,18 +35,11 @@ internal class ProblemReferenceImplementation(
 
     }
 
-
+    override fun toJson(): String {
+        return provider.toJsonString(this)
+    }
 }
 
-fun main() {
-    val provider = GsonProvider()
-    val p = Problem
-        .create(provider)
-        .withTitle("Houston, we have a problem!")
-        .withDetails("We have lost all the oxygen!")
-        .build()
-
-}
 
 
 

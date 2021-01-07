@@ -1,10 +1,17 @@
-package javax.rfc7807
+package javax.rfc7807.api
 
+import com.google.gson.Gson
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import java.net.URI
 import java.net.URL
+
+import javax.rfc7807.impl.GsonProvider
+import javax.rfc7807.impl.ProblemReferenceImplementation
+
+val log: Logger = LoggerFactory.getLogger(Problem::class.java)
+
 
 interface Problem {
 
@@ -18,13 +25,15 @@ interface Problem {
     fun builder(): Builder
     fun builder(provider: JsonProvider): Builder
 
-    abstract class Builder(private val provider: JsonProvider)  {
+    fun toJson() : String
 
-        protected lateinit var details: String
-        protected lateinit var title: String
-        protected lateinit var instance: URI
+    abstract class Builder  {
+
+        protected var details: String? = null
+        protected var title: String? = null
+        protected var instance: URI? = null
         protected var type: URL? = null
-        protected val customValues = mutableListOf<Pair<String, JsonValue>>()
+        private val customValues = mutableListOf<Pair<String, JsonValue>>()
 
 
         open fun withTitle(title: String): Builder {
@@ -69,32 +78,8 @@ interface Problem {
 
         fun from(json: String, provider: JsonProvider = defaultProvider) : Problem {
             log.trace("fromJson called with string $json")
-            val builder = create(provider)
-            return builder.build()
+            return provider.fromJson(json)
         }
     }
 }
 
-interface JsonProvider {
-    fun initialize();
-    fun toJsonString(problem: Problem): String
-    fun toJsonValue(problem: Problem): String
-    fun fromJson(json: String)
-    fun fromJson(json: JsonValue)
-}
-
-interface JsonValue {
-    val isObject: Boolean
-    val isArray: Boolean
-
-    fun asArray(): JsonArray
-    fun asObject(): JsonObject
-}
-
-interface JsonObject {
-
-}
-
-interface JsonArray {
-
-}
