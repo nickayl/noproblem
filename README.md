@@ -1,2 +1,2 @@
-# rfc7807-problem-details
-An RFC 7807 "Problem Details for HTTP API" compliant implementation
+#A Kotlin implementation for RFC 7807 "Problem Details for HTTP API" 
+Project details will be updated soon
