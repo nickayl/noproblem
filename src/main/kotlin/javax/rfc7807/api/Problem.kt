@@ -22,9 +22,6 @@ interface Problem {
     val instance: URI
     val customValues: List<Pair<String, JsonValue>>
 
-    fun builder(): Builder
-    fun builder(provider: JsonProvider): Builder
-
     fun toJson() : String
 
     abstract class Builder  {

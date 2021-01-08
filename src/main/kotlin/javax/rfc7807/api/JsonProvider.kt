@@ -5,15 +5,20 @@ import jdk.jshell.spi.ExecutionControl
 
 
 interface JsonProvider {
-    fun toJsonString(problem: Problem): String
-    fun toJsonObject(problem: Problem): JsonObject
-
+    fun toJson(problem: Problem): String
     fun fromJson(str: String) : Problem
+
+    fun toJsonObject(problem: Problem): JsonObject
     fun <T> fromJson(json: String, klass: Class<T>) : T
-    fun <T> fromJson(json: GsonJsonValue, klass: Class<T>) : T
+    fun <T> fromJson(json: JsonValue, klass: Class<T>) : T
+
+    fun newValue(string: String) : JsonValue
+    fun newValue(int: Int) : JsonValue
+    fun newValue(float: Float) : JsonValue
+    fun newValue(double: Double) : JsonValue
+    fun newValue(any: Any): Any
 }
-abstract class GsonJsonValue(val element: JsonElement) : JsonValue {
-}
+
 
 interface JsonValue {
     val isObject: Boolean
@@ -23,16 +28,23 @@ interface JsonValue {
     val isPrimitive: Boolean
         get() = false
 
-    fun asArray(): JsonArray {
-        throw ExecutionControl.NotImplementedException("Not implemented")
-    }
+    fun asArray(): JsonArray = throw UnsupportedOperationException("Not implemented")
+    fun asObject(): JsonObject = throw UnsupportedOperationException("Not implemented")
 
-    fun asObject(): JsonObject {
-        throw ExecutionControl.NotImplementedException("Not implemented")
-    }
+    fun asString() = runCatching { this as JsonString }.getOrElse { throw ClassCastException("Cannot cast a ${this::class.java.simpleName} instance to a JsonString object") }
+    fun asInt() = runCatching { this as JsonInt }.getOrElse { throw ClassCastException("Cannot cast a ${this::class.java.simpleName} instance to a JsonInt object") }
+    fun asFloat() = runCatching { this as JsonFloat }.getOrElse { throw ClassCastException("Cannot cast a ${this::class.java.simpleName} instance to a JsonFloat object") }
 
-    fun asString() = this as JsonString
-    fun asInt() = this as JsonInt
+    companion object {
+        private val selected = Providers.getSelected()
+
+        fun of(string: String) = selected.newValue(string)
+        fun of(int: Int) = selected.newValue(int)
+        fun of(float: Float) = selected.newValue(float)
+        fun of(double: Double) = selected.newValue(double)
+        fun of(any: Any) = selected.newValue(any)
+
+    }
 }
 
 interface JsonObject : JsonValue {
@@ -49,4 +61,16 @@ interface JsonString : JsonValue {
 
 interface JsonInt : JsonValue {
     val int: Int
+}
+
+interface JsonFloat : JsonValue {
+    val float: Float
+}
+
+interface JsonDouble : JsonValue {
+    val double: Double
+}
+
+interface JsonAny : JsonValue {
+    val any: Any
 }

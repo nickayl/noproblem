@@ -18,8 +18,12 @@ class GsonProvider(gson: Gson? = null) : JsonProvider {
             .registerTypeAdapter(Problem::class.java, ProblemTypeAdapter(this))
             .create()
 
-    override fun toJsonString(problem: Problem): String {
+    override fun toJson(problem: Problem): String {
         return gson.toJson(problem, Problem::class.java)
+    }
+
+    override fun fromJson(str: String): Problem {
+        return gson.fromJson(str, Problem::class.java)
     }
 
     override fun toJsonObject(problem: Problem): JsonObject {
@@ -33,13 +37,31 @@ class GsonProvider(gson: Gson? = null) : JsonProvider {
         return gson.fromJson(json, klass)
     }
 
-    override fun <T> fromJson(json: GsonJsonValue, klass: Class<T>) : T {
+    override fun <T> fromJson(json: JsonValue, klass: Class<T>) : T {
         this.jsonValue = json
+        if(json !is GsonJsonValue)
+            throw IllegalArgumentException("json '$json' value must be of type GsonJsonValue")
         return gson.fromJson(json.element, klass)
     }
 
-    override fun fromJson(str: String): Problem {
-        return gson.fromJson(str, Problem::class.java)
+    override fun newValue(string: String): JsonValue {
+        return GsonJsonString(string)
+    }
+
+    override fun newValue(int: Int): JsonValue {
+        return GsonJsonInt(int)
+    }
+
+    override fun newValue(float: Float): JsonValue {
+        return GsonJsonFloat(float)
+    }
+
+    override fun newValue(double: Double): JsonValue {
+        return GsonJsonDouble(double)
+    }
+
+    override fun newValue(any: Any): Any {
+        return GsonJsonAny(any)
     }
 
     internal fun parse(element: JsonElement): JsonValue {
@@ -58,11 +80,7 @@ class GsonProvider(gson: Gson? = null) : JsonProvider {
     }
 }
 
-class GsonJsonString(override val string: String) : JsonString
-class GsonJsonInt(override val int: Int) : JsonInt
-
-class ProblemTypeAdapter(val provider: GsonProvider) : TypeAdapter<Problem>() {
-
+class ProblemTypeAdapter(private val provider: GsonProvider) : TypeAdapter<Problem>() {
 
     override fun write(out: JsonWriter, p: Problem) {
         out.beginObject()
@@ -70,7 +88,6 @@ class ProblemTypeAdapter(val provider: GsonProvider) : TypeAdapter<Problem>() {
             .name("title").value(p.title)
             .name("details").value(p.details)
             .name("instance").value(p.instance.path)
-
 
         p.customValues.forEach { other ->
             out.name(other.first).value(other.second.asString().string)
@@ -80,10 +97,11 @@ class ProblemTypeAdapter(val provider: GsonProvider) : TypeAdapter<Problem>() {
     }
 
     override fun read(reader: JsonReader): Problem {
-       // return gson.fromJson(reader, Problem::class.java)
+
         val parser = JsonParser.parseReader(reader)
         val obj = parser.asJsonObject
         val problem = Problem.create()
+
         val type = URL(obj.get("type").asString)
         val title = obj.get("title").asString
         val detail = obj.get("details").asString
@@ -105,29 +123,10 @@ class ProblemTypeAdapter(val provider: GsonProvider) : TypeAdapter<Problem>() {
         }
 
         return problem.build()
-
-//        reader.apply {
-//            val builder = Problem.create()
-//            while(hasNext()) {
-//                beginObject()
-//                val peek = peek()
-//                val nextName = nextName()
-//
-//                when(nextName) {
-//                    "type"    -> builder.withType(URL(nextString()))
-//                    "title"   -> builder.withTitle(nextString())
-//                    "details" -> builder.withDetails(nextString())
-//                    "instance" -> builder.withInstance(URI(nextString()))
-//                    else -> {
-//                        when(peek) {
-//                            JsonToken.STRING -> builder.withCustomValue(Pair(nextName, nextString()))
-//                        }
-//                    }
-//                }
-//
-//            }
-//        }
     }
+}
+
+
 
 //    class ProblemGsonNoArgsConstructor {
 //
@@ -154,58 +153,3 @@ class ProblemTypeAdapter(val provider: GsonProvider) : TypeAdapter<Problem>() {
 //                .build()
 //        }
 //    }
-}
-
-class GsonJsonArray(private val gsonArray: com.google.gson.JsonArray) : GsonJsonValue(gsonArray), JsonArray {
-
-    override val isObject = false
-    override val isArray = true
-    override val isPrimitive = false
-
-    override fun asObject(): JsonObject = throw ClassCastException("JsonObject cannot be cast to JsonArray")
-    override fun asArray(): JsonArray = this
-
-    override fun <T> readValue(position: Int, klass: Class<T>): T {
-        val value = gsonArray.get(position)
-        return parseValue(klass, value)
-    }
-
-    override fun toString(): String {
-        return gsonArray.toString()
-    }
-}
-
-class GsonJsonObject(private val gsonObject: com.google.gson.JsonObject) : GsonJsonValue(gsonObject), JsonObject {
-
-    override val isObject = false
-    override val isArray = true
-    override val isPrimitive = false
-
-    override fun asArray(): JsonArray = throw ClassCastException("JsonObject cannot be cast to JsonArray")
-    override fun asObject(): JsonObject = this
-
-    override fun <T> readValue(name: String, klass: Class<T>): T {
-        val value = gsonObject.get(name)
-        return parseValue(klass, value)
-    }
-
-    override fun toString(): String {
-        return gsonObject.toString()
-    }
-}
-
-fun <T> JsonValue.parseValue(klass: Class<T>, value: JsonElement?): T {
-    try {
-        return when(klass) {
-            String::class.java -> value?.asString as T
-            Double::class.java -> value?.asDouble as T
-            Int::class.java -> value?.asInt as T
-            Float::class.java -> value?.asFloat as T
-            JsonArray::class.java -> value?.asJsonArray as T
-            JsonObject::class.java -> value?.asJsonObject as T
-            else -> throw IllegalArgumentException("$klass is incompatible with the object '$value'")
-        }
-    } catch (e: Exception) {
-        throw ClassCastException(e.message)
-    }
-}

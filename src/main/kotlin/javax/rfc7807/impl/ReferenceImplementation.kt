@@ -18,8 +18,8 @@ internal class ProblemReferenceImplementation(
     override val customValues: MutableList<Pair<String, JsonValue>> = mutableListOf()
     override var type: URL? = null
 
-    override fun builder(provider: JsonProvider): Problem.Builder = Builder(provider)
-    override fun builder(): Problem.Builder = Builder(this.provider)
+//    override fun builder(provider: JsonProvider): Problem.Builder = Builder(provider)
+//    override fun builder(): Problem.Builder = Builder(this.provider)
 
     internal class Builder(private val provider: JsonProvider) : Problem.Builder() {
 
@@ -36,7 +36,7 @@ internal class ProblemReferenceImplementation(
     }
 
     override fun toJson(): String {
-        return provider.toJsonString(this)
+        return provider.toJson(this)
     }
 }
 

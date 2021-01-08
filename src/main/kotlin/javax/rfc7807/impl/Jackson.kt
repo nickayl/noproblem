@@ -4,7 +4,7 @@ import javax.rfc7807.api.*
 
 class JacksonProvider : JsonProvider {
 
-    override fun toJsonString(problem: Problem): String {
+    override fun toJson(problem: Problem): String {
         TODO("Not yet implemented")
     }
 
@@ -20,7 +20,7 @@ class JacksonProvider : JsonProvider {
         TODO("Not yet implemented")
     }
 
-    override fun <T> fromJson(json: GsonJsonValue, klass: Class<T>): T {
+    override fun <T> fromJson(json: JsonValue, klass: Class<T>): T {
         TODO("Not yet implemented")
     }
 }
