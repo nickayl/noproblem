@@ -8,7 +8,7 @@ public interface Problem extends ProblemKt {
 
     static Problem.Builder create(JsonProvider provider) {
         try {
-            var binder = (ProblemBinder) Class.forName("org.javando.http.problem.ProblemBinderImpl")
+            var binder = (ProblemBinder) Class.forName("org.javando.http.problem.impl.ProblemBinderImpl")
                     .getDeclaredConstructor()
                     .newInstance();
             return binder.getImplementation(provider)

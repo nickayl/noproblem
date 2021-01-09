@@ -27,7 +27,7 @@ interface ProblemKt {
         protected var status: Int? = null
         protected var instance: URI? = null
         protected var type: URI? = null
-        private val extensions = mutableListOf<Pair<String, JsonValue>>()
+        protected val extensions = mutableListOf<Pair<String, JsonValue>>()
 
         open fun withTitle(title: String): Builder {
             this.title = title

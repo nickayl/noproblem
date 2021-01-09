@@ -18,7 +18,7 @@ internal class ProblemReferenceImplementation(
         return provider.toJson(this)
     }
 
-    internal class Builder(private val provider: JsonProvider) : ProblemKt.Builder() {
+    internal class Builder : ProblemKt.Builder() {
 
         override fun build(): Problem {
             if(type == null || title == null || title!!.isBlank())
@@ -26,7 +26,7 @@ internal class ProblemReferenceImplementation(
 
             return ProblemReferenceImplementation( title ?: "", type!!, status!!, details, instance)
                 .apply {
-                    this.extensions.addAll(extensions)
+                    this.extensions.addAll(super.extensions)
                 }
         }
     }

@@ -12,6 +12,7 @@ fun main() {
         .withTitle("Houston, we have a problem!")
         .withDetails("We have lost all the oxygen!")
         .withInstance(URI("/v1/book/id/32"))
+        .withStatus(403)
         .withType(URI("https://www.api.bookka.com/error-message"))
         .addExtension("account_number", 221344)
         .addExtension("client_name", "John Doe")
@@ -19,9 +20,8 @@ fun main() {
         .addExtension("credit_info", CreditInfo(31.3f, "EUR"))
 //        .addExtensions(Pair("unavailable_credit", JsonValue.of(34.5f)),
 //            Pair("currency", JsonValue.of("EUR")))
-        .build()
 
-    val jsonString = p.toJson()
+    val jsonString = p.build().toJson()
     val pr = Problem.from(jsonString)
 
 

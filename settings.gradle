@@ -1,3 +1,4 @@
 rootProject.name = 'http-json-problem'
 include 'api'
 include 'ref-impl'
+include 'integration-test-project'

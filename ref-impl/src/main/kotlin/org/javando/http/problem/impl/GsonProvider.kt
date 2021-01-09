@@ -8,13 +8,16 @@ import org.javando.http.problem.JsonObject
 import java.net.URI
 
 
-class GsonProvider(gson: Gson? = null) : JsonProvider {
+class GsonProvider : JsonProvider {
 
     private lateinit var jsonValue: JsonValue
     private lateinit var gsonElement: JsonElement
-    private val gson: Gson = gson ?: GsonBuilder()
+    private val gson = GsonBuilder()
         .registerTypeAdapter(Problem::class.java, ProblemTypeAdapter(this))
         .create()
+//    private val gson: Gson = gson ?: GsonBuilder()
+//        .registerTypeAdapter(Problem::class.java, ProblemTypeAdapter(this))
+//        .create()
 
     override fun toJson(problem: Problem): String {
         return gson.toJson(problem, Problem::class.java)
@@ -131,13 +134,15 @@ class ProblemTypeAdapter(private val provider: GsonProvider) : TypeAdapter<Probl
         val title = obj.get("title").asString
         val detail = obj.get("details")?.asString ?: ""
         val instance = URI(obj.get("instance")?.asString ?: "")
+        val status = obj.get("status")?.runCatching { asInt }?.getOrNull() ?: throw IllegalStateException("HTTP Status code cannot be null")
 
-        val reserved = listOf("type", "title", "details", "instance")
+        val reserved = listOf("type", "title", "details", "instance", "status")
 
         problem.withType(type)
             .withTitle(title)
             .withDetails(detail)
             .withInstance(instance)
+            .withStatus(status)
 
         // val entries = obj.entrySet()
         val keys = obj.keySet()

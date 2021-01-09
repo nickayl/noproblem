@@ -7,6 +7,6 @@ import org.javando.http.problem.ProblemBinder
 class ProblemBinderImpl : ProblemBinder {
 
     override fun getImplementation(provider: JsonProvider): Class<out ProblemKt.Builder> {
-        return ProblemReferenceImplementation.Builder(provider)::class.java
+        return ProblemReferenceImplementation.Builder()::class.java
     }
 }
