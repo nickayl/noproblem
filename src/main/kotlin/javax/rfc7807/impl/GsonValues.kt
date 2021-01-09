@@ -1,17 +1,20 @@
 package javax.rfc7807.impl
 
 import com.google.gson.JsonElement
+import com.google.gson.JsonPrimitive
 import java.lang.Exception
 import javax.rfc7807.api.*
 
 
-abstract class GsonJsonValue(val element: JsonElement) : JsonValue {
+abstract class GsonJsonValue(val element: JsonElement, provider: JsonProvider = Providers.getSelected()) : JsonValue {
+
     override val isObject = false
     override val isArray = false
     override val isPrimitive = false
+    //override val jsonString = provider.toJson(element)
 
-    override fun asObject(): JsonObject = throw ClassCastException("JsonObject cannot be cast to JsonArray")
-    override fun asArray(): JsonArray = throw ClassCastException("JsonObject cannot be cast to JsonArray")
+    override fun asObject(): JsonObject = throw ClassCastException("$this cannot be cast to JsonArray")
+    override fun asArray(): JsonArray = throw ClassCastException("$this cannot be cast to JsonArray")
 }
 
 fun <T> JsonValue.parseValue(klass: Class<T>, value: JsonElement?): T {
@@ -21,6 +24,7 @@ fun <T> JsonValue.parseValue(klass: Class<T>, value: JsonElement?): T {
             Double::class.java -> value?.asDouble as T
             Int::class.java -> value?.asInt as T
             Float::class.java -> value?.asFloat as T
+            Boolean::class.java -> value?.asBoolean as T
             JsonArray::class.java -> value?.asJsonArray as T
             JsonObject::class.java -> value?.asJsonObject as T
             else -> throw IllegalArgumentException("$klass is incompatible with the object '$value'")
@@ -30,11 +34,11 @@ fun <T> JsonValue.parseValue(klass: Class<T>, value: JsonElement?): T {
     }
 }
 
-class GsonJsonString(override val string: String) : JsonString
-class GsonJsonInt(override val int: Int) : JsonInt
-class GsonJsonFloat(override val float: Float) : JsonFloat
-class GsonJsonDouble(override val double: Double) : JsonDouble
-class GsonJsonBoolean(val boolean: Boolean) : JsonValue
+class GsonJsonString(override val string: String) : GsonJsonValue(JsonPrimitive(string)), JsonString
+class GsonJsonInt(override val int: Int) : GsonJsonValue(JsonPrimitive(int)), JsonInt
+class GsonJsonFloat(override val float: Float) : GsonJsonValue(JsonPrimitive(float)), JsonFloat
+class GsonJsonDouble(override val double: Double) : GsonJsonValue(JsonPrimitive(double)), JsonDouble
+class GsonJsonBoolean(override val boolean: Boolean) : GsonJsonValue(JsonPrimitive(boolean)), JsonBoolean
 //class GsonJsonAny(override val any: Any) : JsonAny
 
 class GsonJsonArray(private val gsonArray: com.google.gson.JsonArray) : GsonJsonValue(gsonArray), JsonArray {

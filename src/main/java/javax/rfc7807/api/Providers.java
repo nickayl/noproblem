@@ -1,11 +1,10 @@
 package javax.rfc7807.api;
 
 import javax.rfc7807.impl.GsonProvider;
-import java.util.Optional;
 
 public class Providers {
 
-    private static final JsonProvider DEFAULT_PROVIDER = new GsonProvider();
+    private static JsonProvider DEFAULT_PROVIDER;
     private static JsonProvider selectedProvider;
 
     static {
@@ -15,7 +14,7 @@ public class Providers {
                     .getDeclaredConstructor()
                     .newInstance();
         } catch (Exception e) {
-            selectedProvider = DEFAULT_PROVIDER;
+            selectedProvider = DEFAULT_PROVIDER = new GsonProvider();
             e.printStackTrace();
         }
     }
@@ -25,7 +24,8 @@ public class Providers {
     }
 
     public static JsonProvider getSelected() {
-        return Optional.ofNullable(selectedProvider).orElse(DEFAULT_PROVIDER);
+        return selectedProvider;
+        //return Optional.ofNullable(selectedProvider).orElse(DEFAULT_PROVIDER);
     }
 
 }

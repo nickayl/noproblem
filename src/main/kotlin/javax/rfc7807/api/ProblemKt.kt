@@ -4,22 +4,18 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import java.net.URI
-import java.net.URL
-
-import javax.rfc7807.impl.GsonProvider
-import javax.rfc7807.impl.ProblemReferenceImplementation
 
 val log: Logger = LoggerFactory.getLogger(Problem::class.java)
 
+interface ProblemKt {
 
-interface Problem {
+    //val provider: JsonProvider
 
-    val provider: JsonProvider
-
-    val details: String
+    val details: String?
     val title: String
-    var type: URL?
-    val instance: URI
+    val status: Int
+    var type: URI
+    val instance: URI?
     val extensions: List<Pair<String, JsonValue>>
 
     fun toJson(): String
@@ -28,10 +24,10 @@ interface Problem {
 
         protected var details: String? = null
         protected var title: String? = null
+        protected var status: Int? = null
         protected var instance: URI? = null
-        protected var type: URL? = null
+        protected var type: URI? = null
         private val extensions = mutableListOf<Pair<String, JsonValue>>()
-
 
         open fun withTitle(title: String): Builder {
             this.title = title
@@ -43,8 +39,13 @@ interface Problem {
             return this
         }
 
-        open fun withType(url: URL): Builder {
-            this.type = url
+        open fun withType(uri: URI): Builder {
+            this.type = uri
+            return this
+        }
+
+        open fun withStatus(status: Int): Builder {
+            this.status = status
             return this
         }
 
@@ -74,19 +75,10 @@ interface Problem {
         }
 
         abstract fun build(): Problem
+
+        class ProblemBuilderException(override val message: String?,
+                                      override val cause: Throwable? = null) : RuntimeException(message, cause)
     }
 
-    companion object {
-        private val defaultProvider = GsonProvider()
-
-        fun create(provider: JsonProvider = defaultProvider): Builder {
-            return ProblemReferenceImplementation.Builder(provider)
-        }
-
-        fun from(json: String, provider: JsonProvider = defaultProvider): Problem {
-            log.trace("fromJson called with string $json")
-            return provider.fromJson(json)
-        }
-    }
 }
 

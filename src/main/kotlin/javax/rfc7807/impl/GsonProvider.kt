@@ -3,10 +3,8 @@ package javax.rfc7807.impl
 import com.google.gson.*
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonWriter
-import java.lang.NumberFormatException
 import java.net.URI
-import java.net.URL
-import java.text.NumberFormat
+import javax.rfc7807.api.Problem
 import javax.rfc7807.api.*
 import javax.rfc7807.api.JsonObject
 
@@ -22,13 +20,22 @@ class GsonProvider(gson: Gson? = null) : JsonProvider {
         return gson.toJson(problem, Problem::class.java)
     }
 
+    override fun toJson(element: JsonValue): String {
+        return gson.toJson(element as GsonJsonValue)
+    }
+
     override fun fromJson(str: String): Problem {
+        log.trace("fromJson called with string $str");
         return gson.fromJson(str, Problem::class.java)
     }
 
     override fun toJsonObject(problem: Problem): JsonObject {
         val jsonString = gson.toJson(problem, com.google.gson.JsonObject::class.java)
         return GsonJsonObject(gson.fromJson(jsonString, com.google.gson.JsonObject::class.java))
+    }
+
+    override fun get(): Gson {
+        return gson
     }
 
     override fun <T> fromJson(json: String, klass: Class<T>): T {
@@ -60,38 +67,35 @@ class GsonProvider(gson: Gson? = null) : JsonProvider {
         return GsonJsonDouble(double)
     }
 
+    override fun newValue(boolean: Boolean): JsonValue {
+        return GsonJsonBoolean(boolean)
+    }
+
     override fun newValue(any: Any): JsonValue {
         val value = gson.toJsonTree(any)
         return parse(value)
     }
 
     internal fun parse(element: JsonElement): JsonValue {
+        val cannotParseException = IllegalArgumentException("Cannot parse json element $element")
+
         return when (element) {
             is com.google.gson.JsonObject -> GsonJsonObject(element)
             is com.google.gson.JsonArray -> GsonJsonArray(element)
             is com.google.gson.JsonPrimitive ->
                 when {
-                    element.isBoolean -> GsonJsonBoolean(element.asBoolean)
-                    element.isString -> GsonJsonString(element.asString)
+                    element.isBoolean -> JsonValue.of(element.asBoolean)
+                    element.isString -> JsonValue.of(element.asString)
                     element.isNumber -> {
-                        val int = element.runCatching { JsonValue.of(asInt) }.getOrNull()
-                        return if(int == null) {
-                            val float = element.runCatching { JsonValue.of(asFloat) }.getOrNull()
-                            if(float == null) {
-                                val double = element.runCatching { JsonValue.of(asDouble) }.getOrNull()
-                                double ?: throw  IllegalArgumentException("Cannot parse json element $element")
-                            } else float
-                        } else int
+                        element.runCatching { JsonValue.of(asInt) }.getOrNull()
+                            ?: element.runCatching { JsonValue.of(asFloat) }.getOrNull()
+                            ?: element.runCatching { JsonValue.of(asDouble) }.getOrNull()
+                            ?: throw  cannotParseException
                     }
-                    else -> throw  IllegalArgumentException("Cannot parse json element $element")
+                    else -> throw  cannotParseException
                 }
-
-            else -> throw  IllegalArgumentException("Cannot parse json element $element")
+            else -> throw  cannotParseException
         }
-    }
-
-    private fun parseNumber(n: JsonPrimitive): Boolean {
-
     }
 }
 
@@ -100,13 +104,18 @@ class ProblemTypeAdapter(private val provider: GsonProvider) : TypeAdapter<Probl
 
     override fun write(out: JsonWriter, p: Problem) {
         out.beginObject()
-            .name("type").value(p.type?.toString())
+            .name("type").value(p.type.toString())
             .name("title").value(p.title)
-            .name("details").value(p.details)
-            .name("instance").value(p.instance.path)
+            .name("details").value(p.details ?: "")
+            .name("status").value(p.status)
+            .name("instance").value(p.instance?.path ?: "")
+
 
         p.extensions.forEach { other ->
-            out.name(other.first).value(other.second.asString().string)
+            val name = other.first
+            val value = other.second as GsonJsonValue
+            val element = value.element
+            provider.get().toJson(element, out.name(name))
         }
 
         out.endObject()
@@ -118,10 +127,10 @@ class ProblemTypeAdapter(private val provider: GsonProvider) : TypeAdapter<Probl
         val obj = parser.asJsonObject
         val problem = Problem.create()
 
-        val type = URL(obj.get("type").asString)
+        val type = URI(obj.get("type").asString)
         val title = obj.get("title").asString
-        val detail = obj.get("details").asString
-        val instance = URI(obj.get("instance").asString)
+        val detail = obj.get("details")?.asString ?: ""
+        val instance = URI(obj.get("instance")?.asString ?: "")
 
         val reserved = listOf("type", "title", "details", "instance")
 

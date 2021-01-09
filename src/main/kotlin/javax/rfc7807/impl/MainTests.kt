@@ -1,12 +1,10 @@
 package javax.rfc7807.impl
 
 import java.net.URI
-import java.net.URL
-import javax.rfc7807.api.JsonValue
 import javax.rfc7807.api.Problem
 
 
-private fun main() {
+fun main() {
     //val provider = GsonProvider()
 
     val p = Problem
@@ -14,7 +12,7 @@ private fun main() {
         .withTitle("Houston, we have a problem!")
         .withDetails("We have lost all the oxygen!")
         .withInstance(URI("/v1/book/id/32"))
-        .withType(URL("https://www.api.bookka.com/error-message"))
+        .withType(URI("https://www.api.bookka.com/error-message"))
         .addExtension("account_number", 221344)
         .addExtension("client_name", "John Doe")
         .addExtension("transaction_import", 34.5f)
