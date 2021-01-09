@@ -1,2 +1,3 @@
-rootProject.name = 'RFC-7807-Problem-Details'
-
+rootProject.name = 'http-json-problem'
+include 'api'
+include 'ref-impl'
