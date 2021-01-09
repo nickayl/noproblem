@@ -16,7 +16,7 @@ interface JsonProvider {
     fun newValue(int: Int) : JsonValue
     fun newValue(float: Float) : JsonValue
     fun newValue(double: Double) : JsonValue
-    fun newValue(any: Any): Any
+    fun newValue(any: Any): JsonValue
 }
 
 

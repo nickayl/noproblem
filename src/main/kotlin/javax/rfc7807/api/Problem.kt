@@ -1,6 +1,5 @@
 package javax.rfc7807.api
 
-import com.google.gson.Gson
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -16,21 +15,22 @@ val log: Logger = LoggerFactory.getLogger(Problem::class.java)
 interface Problem {
 
     val provider: JsonProvider
+
     val details: String
     val title: String
     var type: URL?
     val instance: URI
-    val customValues: List<Pair<String, JsonValue>>
+    val extensions: List<Pair<String, JsonValue>>
 
-    fun toJson() : String
+    fun toJson(): String
 
-    abstract class Builder  {
+    abstract class Builder {
 
         protected var details: String? = null
         protected var title: String? = null
         protected var instance: URI? = null
         protected var type: URL? = null
-        private val customValues = mutableListOf<Pair<String, JsonValue>>()
+        private val extensions = mutableListOf<Pair<String, JsonValue>>()
 
 
         open fun withTitle(title: String): Builder {
@@ -53,13 +53,23 @@ interface Problem {
             return this
         }
 
-        open fun withCustomValue(pair: Pair<String, JsonValue>): Builder {
-            this.customValues.add(pair)
+        open fun addExtensions(vararg pairs: Pair<String, JsonValue>): Builder {
+            return addExtensions(pairs.toList())
+        }
+
+        open fun addExtensions(pairs: List<Pair<String, JsonValue>>): Builder {
+            this.extensions.addAll(pairs)
             return this
         }
 
-        open fun withCustomValues(pairs: List<Pair<String, JsonValue>>): Builder {
-            this.customValues.addAll(pairs)
+        open fun addExtension(name: String, value: String) = addExtensionInternal(name, JsonValue.of(value))
+        open fun addExtension(name: String, value: Int) = addExtensionInternal(name, JsonValue.of(value))
+        open fun addExtension(name: String, value: Float) = addExtensionInternal(name, JsonValue.of(value))
+        open fun addExtension(name: String, value: Double) = addExtensionInternal(name, JsonValue.of(value))
+        open fun addExtension(name: String, value: Any) = addExtensionInternal(name, JsonValue.of(value))
+
+        private fun addExtensionInternal(name: String, value: JsonValue): Builder {
+            extensions.add(Pair(name, value))
             return this
         }
 
@@ -73,7 +83,7 @@ interface Problem {
             return ProblemReferenceImplementation.Builder(provider)
         }
 
-        fun from(json: String, provider: JsonProvider = defaultProvider) : Problem {
+        fun from(json: String, provider: JsonProvider = defaultProvider): Problem {
             log.trace("fromJson called with string $json")
             return provider.fromJson(json)
         }

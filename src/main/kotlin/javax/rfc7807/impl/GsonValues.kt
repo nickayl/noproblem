@@ -34,7 +34,8 @@ class GsonJsonString(override val string: String) : JsonString
 class GsonJsonInt(override val int: Int) : JsonInt
 class GsonJsonFloat(override val float: Float) : JsonFloat
 class GsonJsonDouble(override val double: Double) : JsonDouble
-class GsonJsonAny(override val any: Any) : JsonAny
+class GsonJsonBoolean(val boolean: Boolean) : JsonValue
+//class GsonJsonAny(override val any: Any) : JsonAny
 
 class GsonJsonArray(private val gsonArray: com.google.gson.JsonArray) : GsonJsonValue(gsonArray), JsonArray {
 

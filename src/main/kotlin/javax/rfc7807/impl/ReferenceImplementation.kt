@@ -15,7 +15,7 @@ internal class ProblemReferenceImplementation(
     override val instance: URI
 ) : Problem {
 
-    override val customValues: MutableList<Pair<String, JsonValue>> = mutableListOf()
+    override val extensions: MutableList<Pair<String, JsonValue>> = mutableListOf()
     override var type: URL? = null
 
 //    override fun builder(provider: JsonProvider): Problem.Builder = Builder(provider)
@@ -29,7 +29,7 @@ internal class ProblemReferenceImplementation(
                 instance ?: URI(""))
                 .apply {
                     this.type = super.type;
-                    this.customValues.addAll(customValues)
+                    this.extensions.addAll(extensions)
                 }
         }
 

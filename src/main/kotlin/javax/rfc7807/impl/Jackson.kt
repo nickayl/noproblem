@@ -8,11 +8,11 @@ class JacksonProvider : JsonProvider {
         TODO("Not yet implemented")
     }
 
-    override fun toJsonObject(problem: Problem): JsonObject {
+    override fun fromJson(str: String): Problem {
         TODO("Not yet implemented")
     }
 
-    override fun fromJson(str: String): Problem {
+    override fun toJsonObject(problem: Problem): JsonObject {
         TODO("Not yet implemented")
     }
 
@@ -21,6 +21,26 @@ class JacksonProvider : JsonProvider {
     }
 
     override fun <T> fromJson(json: JsonValue, klass: Class<T>): T {
+        TODO("Not yet implemented")
+    }
+
+    override fun newValue(string: String): JsonValue {
+        TODO("Not yet implemented")
+    }
+
+    override fun newValue(int: Int): JsonValue {
+        TODO("Not yet implemented")
+    }
+
+    override fun newValue(float: Float): JsonValue {
+        TODO("Not yet implemented")
+    }
+
+    override fun newValue(double: Double): JsonValue {
+        TODO("Not yet implemented")
+    }
+
+    override fun newValue(any: Any): Any {
         TODO("Not yet implemented")
     }
 }

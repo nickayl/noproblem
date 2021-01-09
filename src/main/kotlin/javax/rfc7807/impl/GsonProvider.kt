@@ -3,11 +3,11 @@ package javax.rfc7807.impl
 import com.google.gson.*
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonWriter
-import java.lang.Exception
+import java.lang.NumberFormatException
 import java.net.URI
 import java.net.URL
+import java.text.NumberFormat
 import javax.rfc7807.api.*
-import javax.rfc7807.api.JsonArray
 import javax.rfc7807.api.JsonObject
 
 class GsonProvider(gson: Gson? = null) : JsonProvider {
@@ -15,8 +15,8 @@ class GsonProvider(gson: Gson? = null) : JsonProvider {
     private lateinit var jsonValue: JsonValue
     private lateinit var gsonElement: JsonElement
     private val gson: Gson = gson ?: GsonBuilder()
-            .registerTypeAdapter(Problem::class.java, ProblemTypeAdapter(this))
-            .create()
+        .registerTypeAdapter(Problem::class.java, ProblemTypeAdapter(this))
+        .create()
 
     override fun toJson(problem: Problem): String {
         return gson.toJson(problem, Problem::class.java)
@@ -31,15 +31,15 @@ class GsonProvider(gson: Gson? = null) : JsonProvider {
         return GsonJsonObject(gson.fromJson(jsonString, com.google.gson.JsonObject::class.java))
     }
 
-    override fun <T> fromJson(json: String, klass: Class<T>) : T {
+    override fun <T> fromJson(json: String, klass: Class<T>): T {
         gsonElement = gson.fromJson(json, JsonElement::class.java)
         jsonValue = parse(gsonElement)
         return gson.fromJson(json, klass)
     }
 
-    override fun <T> fromJson(json: JsonValue, klass: Class<T>) : T {
+    override fun <T> fromJson(json: JsonValue, klass: Class<T>): T {
         this.jsonValue = json
-        if(json !is GsonJsonValue)
+        if (json !is GsonJsonValue)
             throw IllegalArgumentException("json '$json' value must be of type GsonJsonValue")
         return gson.fromJson(json.element, klass)
     }
@@ -60,8 +60,9 @@ class GsonProvider(gson: Gson? = null) : JsonProvider {
         return GsonJsonDouble(double)
     }
 
-    override fun newValue(any: Any): Any {
-        return GsonJsonAny(any)
+    override fun newValue(any: Any): JsonValue {
+        val value = gson.toJsonTree(any)
+        return parse(value)
     }
 
     internal fun parse(element: JsonElement): JsonValue {
@@ -70,15 +71,30 @@ class GsonProvider(gson: Gson? = null) : JsonProvider {
             is com.google.gson.JsonArray -> GsonJsonArray(element)
             is com.google.gson.JsonPrimitive ->
                 when {
+                    element.isBoolean -> GsonJsonBoolean(element.asBoolean)
                     element.isString -> GsonJsonString(element.asString)
-                    element.isNumber -> GsonJsonInt(element.asInt)
+                    element.isNumber -> {
+                        val int = element.runCatching { JsonValue.of(asInt) }.getOrNull()
+                        return if(int == null) {
+                            val float = element.runCatching { JsonValue.of(asFloat) }.getOrNull()
+                            if(float == null) {
+                                val double = element.runCatching { JsonValue.of(asDouble) }.getOrNull()
+                                double ?: throw  IllegalArgumentException("Cannot parse json element $element")
+                            } else float
+                        } else int
+                    }
                     else -> throw  IllegalArgumentException("Cannot parse json element $element")
                 }
 
             else -> throw  IllegalArgumentException("Cannot parse json element $element")
         }
     }
+
+    private fun parseNumber(n: JsonPrimitive): Boolean {
+
+    }
 }
+
 
 class ProblemTypeAdapter(private val provider: GsonProvider) : TypeAdapter<Problem>() {
 
@@ -89,7 +105,7 @@ class ProblemTypeAdapter(private val provider: GsonProvider) : TypeAdapter<Probl
             .name("details").value(p.details)
             .name("instance").value(p.instance.path)
 
-        p.customValues.forEach { other ->
+        p.extensions.forEach { other ->
             out.name(other.first).value(other.second.asString().string)
         }
 
@@ -114,18 +130,17 @@ class ProblemTypeAdapter(private val provider: GsonProvider) : TypeAdapter<Probl
             .withDetails(detail)
             .withInstance(instance)
 
-       // val entries = obj.entrySet()
+        // val entries = obj.entrySet()
         val keys = obj.keySet()
 
         keys.filter { it !in reserved }.forEach {
             val element = obj.get(it)
-            problem.withCustomValue(Pair(it, provider.parse(element)))
+            problem.addExtensions(Pair(it, provider.parse(element)))
         }
 
         return problem.build()
     }
 }
-
 
 
 //    class ProblemGsonNoArgsConstructor {

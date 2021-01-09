@@ -15,8 +15,12 @@ private fun main() {
         .withDetails("We have lost all the oxygen!")
         .withInstance(URI("/v1/book/id/32"))
         .withType(URL("https://www.api.bookka.com/error-message"))
-        .withCustomValue(Pair("invalid-price", JsonValue.of(34.5f)))
-        .withCustomValue(Pair("currency", JsonValue.of("EUR")))
+        .addExtension("account_number", 221344)
+        .addExtension("client_name", "John Doe")
+        .addExtension("transaction_import", 34.5f)
+        .addExtension("credit_info", CreditInfo(31.3f, "EUR"))
+//        .addExtensions(Pair("unavailable_credit", JsonValue.of(34.5f)),
+//            Pair("currency", JsonValue.of("EUR")))
         .build()
 
     val jsonString = p.toJson()
@@ -31,3 +35,5 @@ private fun main() {
     println("$jsonString")
 
 }
+
+class CreditInfo(var balance: Float, var currency: String)
