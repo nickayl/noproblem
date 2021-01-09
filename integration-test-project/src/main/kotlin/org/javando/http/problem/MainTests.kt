@@ -1,4 +1,4 @@
-package org.javando.http.problem.impl
+package org.javando.http.problem
 
 import org.javando.http.problem.Problem
 import java.net.URI
