@@ -1,5 +1,7 @@
 package org.javando.http.problem
 
+import java.util.*
+
 interface JsonValueKt {
     //val jsonString: String
     val isObject: Boolean
@@ -12,11 +14,17 @@ interface JsonValueKt {
     fun asArray(): JsonArray = throw UnsupportedOperationException("Not implemented")
     fun asObject(): JsonObject = throw UnsupportedOperationException("Not implemented")
 
+    val provider: JsonProvider
+
     fun asString() = runCatching { this as JsonString }.getOrElse { throw ClassCastException("Cannot cast a ${this::class.java.simpleName} instance to a JsonString object") }
     fun asInt() = runCatching { this as JsonInt }.getOrElse { throw ClassCastException("Cannot cast a ${this::class.java.simpleName} instance to a JsonInt object") }
     fun asFloat() = runCatching { this as JsonFloat }.getOrElse { throw ClassCastException("Cannot cast a ${this::class.java.simpleName} instance to a JsonFloat object") }
     fun asDouble() = runCatching { this as JsonDouble }.getOrElse { throw ClassCastException("Cannot cast a ${this::class.java.simpleName} instance to a JsonDouble object") }
     fun asBoolean() = runCatching { this as JsonBoolean }.getOrElse { throw ClassCastException("Cannot cast a ${this::class.java.simpleName} instance to a JsonBoolean object") }
+
+    companion object {
+        lateinit var provider: JsonProvider
+    }
 }
 
 interface JsonObject : JsonValue {
@@ -45,6 +53,16 @@ interface JsonDouble : JsonValue {
 
 interface JsonBoolean : JsonValue {
     val boolean: Boolean
+}
+
+interface JsonDate : JsonString {
+    val date: Date
+
+    class InvalidDateStringException(override val message: String, override val cause: Throwable? = null) :
+        RuntimeException(message, cause)
+
+    class MissingDateFormatException(override val message: String, override val cause: Throwable? = null) :
+        RuntimeException(message, cause)
 }
 
 interface JsonAny : JsonValue {

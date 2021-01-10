@@ -3,22 +3,21 @@ package org.javando.http.problem.impl
 import org.javando.http.problem.*
 import java.net.URI
 
-internal class ProblemReferenceImplementation(
+internal class ProblemReferenceImplementation constructor(
     override val title: String,
     override var type: URI,
     override val status: Int,
     override val details: String?,
-    override val instance: URI?
-) : Problem {
+    override val instance: URI?,
+) : Problem() {
 
-    private val provider = Providers.getSelected()
     override val extensions: MutableList<Pair<String, JsonValue>> = mutableListOf()
 
     override fun toJson(): String {
-        return provider.toJson(this)
+        return JsonValueKt.Companion.provider.toJson(this)
     }
 
-    internal class Builder : ProblemKt.Builder() {
+    internal class Builder : ProblemBuilder() {
 
         override fun build(): Problem {
             if(type == null || title == null || title!!.isBlank())
@@ -31,8 +30,8 @@ internal class ProblemReferenceImplementation(
         }
     }
 
-    //    override fun builder(provider: JsonProvider): Problem.Builder = Builder(provider)
-//    override fun builder(): Problem.Builder = Builder(this.provider)
+    //    override fun builder(provider: JsonProvider): ProblemBuilder = Builder(provider)
+//    override fun builder(): ProblemBuilder = Builder(this.provider)
 }
 
 

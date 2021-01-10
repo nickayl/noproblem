@@ -6,18 +6,32 @@ import com.google.gson.stream.JsonWriter
 import org.javando.http.problem.*
 import org.javando.http.problem.JsonObject
 import java.net.URI
+import java.text.SimpleDateFormat
+import java.util.*
 
 
-class GsonProvider : JsonProvider {
+class GsonProvider @JvmOverloads constructor(gson: Gson = Gson(),
+                                             override var dateIdentifier: String = "date",
+                                             datePattern: String = "dd/MM/yyyy hh:mm:ss") : JsonProvider {
 
     private lateinit var jsonValue: JsonValue
     private lateinit var gsonElement: JsonElement
-    private val gson = GsonBuilder()
+    private var gson: Gson = gson.newBuilder()
         .registerTypeAdapter(Problem::class.java, ProblemTypeAdapter(this))
+        .setDateFormat(datePattern)
         .create()
-//    private val gson: Gson = gson ?: GsonBuilder()
-//        .registerTypeAdapter(Problem::class.java, ProblemTypeAdapter(this))
-//        .create()
+        set(value) {
+            field = value.newBuilder()
+                .registerTypeAdapter(Problem::class.java, ProblemTypeAdapter(this))
+                .setDateFormat(dateFormatPattern.toPattern())
+                .create()
+        }
+
+    init {
+        JsonValueKt.provider = this
+    }
+
+    override var dateFormatPattern = SimpleDateFormat(datePattern)
 
     override fun toJson(problem: Problem): String {
         return gson.toJson(problem, Problem::class.java)
@@ -28,7 +42,7 @@ class GsonProvider : JsonProvider {
     }
 
     override fun fromJson(str: String): Problem {
-        log.trace("fromJson called with string $str");
+        log.trace("fromJson in ${this::class.java.simpleName} implementation called with string $str");
         return gson.fromJson(str, Problem::class.java)
     }
 
@@ -54,23 +68,23 @@ class GsonProvider : JsonProvider {
         return gson.fromJson(json.element, klass)
     }
 
-    override fun newValue(string: String): JsonValue {
+    override fun newValue(string: String): JsonString {
         return GsonJsonString(string)
     }
 
-    override fun newValue(int: Int): JsonValue {
+    override fun newValue(int: Int): JsonInt {
         return GsonJsonInt(int)
     }
 
-    override fun newValue(float: Float): JsonValue {
+    override fun newValue(float: Float): JsonFloat {
         return GsonJsonFloat(float)
     }
 
-    override fun newValue(double: Double): JsonValue {
+    override fun newValue(double: Double): JsonDouble {
         return GsonJsonDouble(double)
     }
 
-    override fun newValue(boolean: Boolean): JsonValue {
+    override fun newValue(boolean: Boolean): JsonBoolean {
         return GsonJsonBoolean(boolean)
     }
 
@@ -79,7 +93,7 @@ class GsonProvider : JsonProvider {
         return parse(value)
     }
 
-    internal fun parse(element: JsonElement): JsonValue {
+    internal fun parse(element: JsonElement, name: String? = null): JsonValue {
         val cannotParseException = IllegalArgumentException("Cannot parse json element $element")
 
         return when (element) {
@@ -88,7 +102,15 @@ class GsonProvider : JsonProvider {
             is com.google.gson.JsonPrimitive ->
                 when {
                     element.isBoolean -> JsonValue.of(element.asBoolean)
-                    element.isString -> JsonValue.of(element.asString)
+                    element.isString ->
+                        element.asString.let { str ->
+                            if (name?.toLowerCase()?.contains(dateIdentifier) == true)
+                                kotlin.runCatching { JsonValue.ofDate(str) }.also {
+                                    it.recover { e -> e.printStackTrace(); log.warn("Found a string with 'date' as substring that is invalid: '$str'") }
+                                }.getOrNull() ?: JsonValue.of(str)
+                            else
+                                JsonValue.of(str)
+                        }
                     element.isNumber -> {
                         element.runCatching { JsonValue.of(asInt) }.getOrNull()
                             ?: element.runCatching { JsonValue.of(asFloat) }.getOrNull()
@@ -99,6 +121,14 @@ class GsonProvider : JsonProvider {
                 }
             else -> throw  cannotParseException
         }
+    }
+
+    override fun newDateValue(dateString: String): JsonDate {
+        return GsonJsonDateInput(dateString, null, this)
+    }
+
+    override fun newDateValue(value: Date): JsonDate {
+        return GsonJsonDateInput(null, value, this)
     }
 }
 
@@ -116,9 +146,14 @@ class ProblemTypeAdapter(private val provider: GsonProvider) : TypeAdapter<Probl
 
         p.extensions.forEach { other ->
             val name = other.first
-            val value = other.second as GsonJsonValue
+            var value = other.second as GsonJsonValue
             val element = value.element
-            provider.get().toJson(element, out.name(name))
+
+            if(value is JsonDate) {
+                out.name(name).value(value.string)
+                //provider.dateFormatPattern?.also { out.name(name).value(it.format(value.date)) }
+            } else
+                provider.get().toJson(element, out.name(name))
         }
 
         out.endObject()
@@ -134,7 +169,8 @@ class ProblemTypeAdapter(private val provider: GsonProvider) : TypeAdapter<Probl
         val title = obj.get("title").asString
         val detail = obj.get("details")?.asString ?: ""
         val instance = URI(obj.get("instance")?.asString ?: "")
-        val status = obj.get("status")?.runCatching { asInt }?.getOrNull() ?: throw IllegalStateException("HTTP Status code cannot be null")
+        val status = obj.get("status")?.runCatching { asInt }?.getOrNull()
+            ?: throw IllegalStateException("HTTP Status code cannot be null")
 
         val reserved = listOf("type", "title", "details", "instance", "status")
 
@@ -149,7 +185,7 @@ class ProblemTypeAdapter(private val provider: GsonProvider) : TypeAdapter<Probl
 
         keys.filter { it !in reserved }.forEach {
             val element = obj.get(it)
-            problem.addExtensions(Pair(it, provider.parse(element)))
+            problem.addExtensions(Pair(it, provider.parse(element, it)))
         }
 
         return problem.build()
