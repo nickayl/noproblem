@@ -1,6 +1,5 @@
-package org.javando.http.problem.impl
+package org.javando.http.problem
 
-import org.javando.http.problem.*
 import java.net.URI
 
 internal class ProblemReferenceImplementation @JvmOverloads constructor(
@@ -9,20 +8,35 @@ internal class ProblemReferenceImplementation @JvmOverloads constructor(
     override val status: Int,
     override val details: String?,
     override val instance: URI?,
-) : Problem() {
+    jsonProvider: JsonProvider
+) : Problem(jsonProvider) {
 
     override val extensions: Map<String, JsonValue> = mutableMapOf()
     private val _internalExtensions: MutableMap<String, JsonValue> = extensions as MutableMap<String, JsonValue>
 
+    override fun <T> getExtensionValue(name: String): T? {
+        if(extensions.containsKey(name)) {
+            val value = extensions[name]
+            if(value is JsonAny)
+                return extensions
+                    .runCatching { value.any as T }
+                    .onFailure { log.warn("cannot cast '${value.any::class.java} to parameterized type ") }
+                    .getOrNull()
+            log.warn("Failed to get extension value named '$name' as class '$value'")
+        } else
+            log.warn("No registered extension class with name '$name'")
+        return null
+    }
+
     override fun toJson(): String {
-        return JsonValueKt.Companion.provider.toJson(this)
+        return jsonProvider.toJson(this)
     }
 
     override fun toJsonObject(): JsonObject {
-        TODO("Not yet implemented")
+        return jsonProvider.toJsonObject(this)
     }
 
-    internal class Builder : ProblemBuilder() {
+    internal class Builder(jsonProvider: JsonProvider) : ProblemBuilder(jsonProvider) {
 
         override fun build(): Problem {
             if (title == null || title!!.isBlank())
@@ -31,7 +45,7 @@ internal class ProblemReferenceImplementation @JvmOverloads constructor(
                 throw ProblemBuilderException("The provided HTTP Status code '$status' is invalid")
 
 
-            return ProblemReferenceImplementation(title!!, type, status!!, details, instance)
+            return ProblemReferenceImplementation(title!!, type, status!!, details, instance, jsonProvider)
                 .apply {
                     this._internalExtensions.putAll(super.extensions)
 

@@ -18,11 +18,13 @@ interface ProblemKt {
     val instance: URI?
     val extensions: Map<String, JsonValue>
 
+
+    fun <T> getExtensionValue(name: String) : T?
     fun toJson(): String
     fun toJsonObject(): JsonObject
 }
 
-abstract class ProblemBuilder {
+abstract class ProblemBuilder(protected val jsonProvider: JsonProvider) {
 
     protected var details: String? = null
     protected var title: String? = null
@@ -80,98 +82,4 @@ abstract class ProblemBuilder {
     }
 
     abstract fun build(): Problem
-
-    class ProblemBuilderException(
-        override val message: String?,
-        override val cause: Throwable? = null
-    ) : RuntimeException(message, cause)
 }
-
-
-//sealed class Property<T> {
-//    abstract val property: T
-//    abstract val name: String
-//}
-//
-//class DateFormatProperty(override val property: String) : Property<String>() {
-//    override val name = "org.javando.http.problem.property.dateFormat"
-//}
-//class DateIdentifierProperty(override val property: String) : Property<String>() {
-//    override val name = "org.javando.http.problem.property.dateIdentifier"
-//}
-//class JsonProviderProperty(override val property: JsonProvider) : Property<JsonProvider>() {
-//    override val name = "org.javando.http.problem.property.jsonProvider"
-//}
-
-
-//interface ProblemConfigurer {
-//    var provider: JsonProvider?
-//    var dateFormat: String
-//    var dateIdentifier: String
-//
-//    fun setJsonProvider(provider: JsonProvider): ProblemConfigurer
-//    fun setDateFormat(pattern: String): ProblemConfigurer
-//    fun setDateIdentifier(identifier: String): ProblemConfigurer
-//    fun andThen() : ProblemBuilder
-//
-//    companion object Static {
-//        const val DEFAULT_DATE_FORMAT: String = "dd/MM/yyyy"
-//        const val DEFAULT_DATE_TIME_FORMAT: String = "dd/MM/yyyy hh:mm:ss"
-//        const val DEFAULT_DATE_IDENTIFIER = "date"
-//        val instance: ProblemConfigurer by lazy { ProblemConfigurerImpl() }
-//    }
-//}
-//
-//private open class ProblemConfigurerImpl : ProblemConfigurer {
-//
-//    override var provider: JsonProvider? = null
-//        set(value) {
-//            if(value == null)
-//                throw IllegalArgumentException("JsonProvider cannot be null")
-//            field = value
-//            value.dateFormatPattern = SimpleDateFormat(dateFormat)
-//            value.dateIdentifier = dateIdentifier
-//        }
-//    override var dateFormat: String = ProblemConfigurer.DEFAULT_DATE_TIME_FORMAT
-//    override var dateIdentifier: String = ProblemConfigurer.DEFAULT_DATE_IDENTIFIER
-//
-//    override fun setJsonProvider(provider: JsonProvider): ProblemConfigurer {
-//        this.provider = provider
-//        return this
-//    }
-//
-//    override fun setDateFormat(pattern: String): ProblemConfigurer {
-//        this.dateFormat = pattern
-//        return this
-//    }
-//
-//    override fun setDateIdentifier(identifier: String): ProblemConfigurer {
-//        this.dateIdentifier = identifier
-//        return this
-//    }
-//
-//    override fun andThen(): ProblemBuilder {
-//        return Problem.create(this)
-//    }
-//}
-//
-//private class AutomaticProblemConfigurer  : ProblemConfigurerImpl() {
-//
-//    init {
-//        try {
-//            val binder = Class
-//                .forName("org.javando.http.problem.impl.ProviderBinderImpl")
-//                .getDeclaredConstructor()
-//                .newInstance() as ProviderBinder
-//            provider = binder.implementation
-//                .getDeclaredConstructor()
-//                .newInstance()!!.also {
-//                    it.dateFormatPattern = SimpleDateFormat(dateFormat);
-//                    it.dateIdentifier = dateIdentifier
-//                }
-//        } catch (e: Exception) {
-//            e.printStackTrace()
-//            throw MissingImplementationException("Cannot find a valid implementation for ProblemBinder", e)
-//        }
-//    }
-//}

@@ -1,6 +1,9 @@
 package org.javando.http.problem;
 
 import java.util.Date;
+import java.util.Optional;
+
+//import static org.javando.http.problem.ReflectKt.getDefaultProviderOrThrow;
 
 /**
  * This is the base class for all JsonValue types. <br>
@@ -15,13 +18,28 @@ import java.util.Date;
  **/
 public interface JsonValue extends JsonValueKt {
 
+    final class Internal {
+        private static JsonProvider jsonProvider;
+
+        private Internal() { }
+
+        public static JsonProvider getJsonProvider() {
+            return Optional.ofNullable(jsonProvider).orElseThrow(() ->
+                    new JsonProviderNotSetException("Cannot invoke static method JsonValue.of(...) without setting the JsonProvider with setJsonProvider"));
+        }
+    }
+
+    static void setJsonProvider(JsonProvider provider) {
+        Internal.jsonProvider = provider;
+    }
+
     /**
      * Creates a new JsonString instance based on the provider's implementation
      * @param string The string to be encapsulated in a JsonString instance
      * @return The JsonString instance
      */
     static JsonString of(String string) {
-        return Companion.getProvider().newValue(string);
+        return Internal.getJsonProvider().newValue(string);
     }
 
     /**
@@ -31,7 +49,7 @@ public interface JsonValue extends JsonValueKt {
      */
 
     static JsonDate of(Date date) {
-        return Companion.getProvider().newDateValue(date);
+        return Internal.getJsonProvider().newDateValue(date);
     }
 
     /**
@@ -42,7 +60,7 @@ public interface JsonValue extends JsonValueKt {
      */
 
     static JsonDate ofDate(String string) {
-        return Companion.getProvider().newDateValue(string);
+        return Internal.getJsonProvider().newDateValue(string);
     }
 
     /**
@@ -51,7 +69,7 @@ public interface JsonValue extends JsonValueKt {
      * @return The JsonInt instance
      */
     static JsonInt of(int mInt) {
-        return Companion.getProvider().newValue(mInt);
+        return Internal.getJsonProvider().newValue(mInt);
     }
 
     /**
@@ -60,7 +78,7 @@ public interface JsonValue extends JsonValueKt {
      * @return The JsonFloat instance
      */
     static JsonFloat of(float mFloat) {
-        return Companion.getProvider().newValue(mFloat);
+        return Internal.getJsonProvider().newValue(mFloat);
     }
 
     /**
@@ -69,7 +87,7 @@ public interface JsonValue extends JsonValueKt {
      * @return The JsonDouble instance
      */
     static JsonDouble of(double mDouble) {
-        return Companion.getProvider().newValue(mDouble);
+        return Internal.getJsonProvider().newValue(mDouble);
     }
 
     /**
@@ -78,7 +96,7 @@ public interface JsonValue extends JsonValueKt {
      * @return The JsonBoolean instance
      */
     static JsonBoolean of(boolean mBoolean) {
-        return Companion.getProvider().newValue(mBoolean);
+        return Internal.getJsonProvider().newValue(mBoolean);
     }
 
     /**
@@ -88,7 +106,7 @@ public interface JsonValue extends JsonValueKt {
      * @return The JsonValue instance
      */
     static JsonValue of(Object mObject) {
-        return Companion.getProvider().newValue(mObject);
+        return Internal.getJsonProvider().newValue(mObject);
     }
 }
 

@@ -22,9 +22,9 @@ interface JsonValueKt {
     fun asDouble() = runCatching { this as JsonDouble }.getOrElse { throw ClassCastException("Cannot cast a ${this::class.java.simpleName} instance to a JsonDouble object") }
     fun asBoolean() = runCatching { this as JsonBoolean }.getOrElse { throw ClassCastException("Cannot cast a ${this::class.java.simpleName} instance to a JsonBoolean object") }
 
-    companion object {
-        lateinit var provider: JsonProvider
-    }
+//    companion object {
+//        lateinit var provider: JsonProvider
+//    }
 }
 
 interface JsonObject : JsonValue {

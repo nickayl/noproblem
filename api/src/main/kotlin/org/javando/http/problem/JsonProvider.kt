@@ -16,6 +16,12 @@ interface JsonProvider {
     fun <T> fromJson(json: JsonValue, klass: Class<T>) : T
 
     fun get(): Any
+    fun registerExtensionClasses(vararg pairs: Pair<String, Class<*>>) : JsonProvider
+    fun registerExtensionClass(jsonPropertyName: String, klass: Class<*>) : JsonProvider
+    fun setDateFormat(pattern: String) : JsonProvider
+    fun setDateIdentifier(identifier: String) : JsonProvider
+
+    var extensionClasses: Map<String, Class<*>>
     var dateFormatPattern: SimpleDateFormat
     var dateIdentifier: String
 

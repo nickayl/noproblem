@@ -1,4 +1,4 @@
 rootProject.name = 'http-json-problem'
 include 'api'
-include 'ref-impl'
+include 'gson-provider'
 include 'integration-test-project'

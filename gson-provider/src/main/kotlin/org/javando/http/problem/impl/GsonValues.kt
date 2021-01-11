@@ -8,15 +8,13 @@ import java.util.*
 
 
 abstract class GsonJsonValue @JvmOverloads constructor(
-    var element: JsonElement? = null
+    var element: JsonElement? = null,
+    override val provider: JsonProvider
 ) : JsonValue {
 
     override val isObject = false
     override val isArray = false
     override val isPrimitive = false
-
-    override val provider: JsonProvider
-        get() = JsonValueKt.provider
 
     //override val jsonString = provider.toJson(element)
 
@@ -41,12 +39,13 @@ fun <T> JsonValue.parseValue(klass: Class<T>, value: JsonElement?): T {
     }
 }
 
-class GsonJsonString(override val string: String) : GsonJsonValue(JsonPrimitive(string)), JsonString
-class GsonJsonInt(override val int: Int) : GsonJsonValue(JsonPrimitive(int)), JsonInt
-class GsonJsonFloat(override val float: Float) : GsonJsonValue(JsonPrimitive(float)), JsonFloat
-class GsonJsonDouble(override val double: Double) : GsonJsonValue(JsonPrimitive(double)), JsonDouble
-class GsonJsonBoolean(override val boolean: Boolean) : GsonJsonValue(JsonPrimitive(boolean)), JsonBoolean
-class GsonJsonDateInput @JvmOverloads constructor(string: String? = null, date: Date? = null) : GsonJsonValue(), JsonDate {
+class GsonJsonString(provider: JsonProvider, override val string: String) : GsonJsonValue(JsonPrimitive(string),provider), JsonString
+class GsonJsonAny(provider: JsonProvider, element: JsonElement? = null, override val any: Any) : GsonJsonValue(element, provider), JsonAny
+class GsonJsonInt(provider: JsonProvider, override val int: Int) : GsonJsonValue(JsonPrimitive(int), provider), JsonInt
+class GsonJsonFloat(provider: JsonProvider, override val float: Float) : GsonJsonValue(JsonPrimitive(float), provider), JsonFloat
+class GsonJsonDouble(provider: JsonProvider, override val double: Double) : GsonJsonValue(JsonPrimitive(double), provider), JsonDouble
+class GsonJsonBoolean(provider: JsonProvider, override val boolean: Boolean) : GsonJsonValue(JsonPrimitive(boolean), provider), JsonBoolean
+class GsonJsonDateInput @JvmOverloads constructor(provider: JsonProvider, string: String? = null, date: Date? = null) : GsonJsonValue(provider = provider), JsonDate {
     init {
         if(string == null && date == null)
             throw IllegalArgumentException("Cannot create a JsonDate with both string and date object null!")
@@ -60,7 +59,7 @@ class GsonJsonDateInput @JvmOverloads constructor(string: String? = null, date: 
                 ?: throw JsonDate.InvalidDateStringException("Cannot parse date '$string' with the provided date pattern '${provider.dateFormatPattern.toPattern()}'")
 }
 
-class GsonJsonArray(private val gsonArray: com.google.gson.JsonArray) : GsonJsonValue(gsonArray), JsonArray {
+class GsonJsonArray(provider: JsonProvider, private val gsonArray: com.google.gson.JsonArray) : GsonJsonValue(gsonArray, provider), JsonArray {
 
     override val isArray = true
     override fun asArray(): JsonArray = this
@@ -75,7 +74,7 @@ class GsonJsonArray(private val gsonArray: com.google.gson.JsonArray) : GsonJson
     }
 }
 
-class GsonJsonObject(private val gsonObject: com.google.gson.JsonObject) : GsonJsonValue(gsonObject), JsonObject {
+class GsonJsonObject(provider: JsonProvider, private val gsonObject: com.google.gson.JsonObject) : GsonJsonValue(gsonObject, provider), JsonObject {
 
     override val isObject = true
     override fun asObject(): JsonObject = this
