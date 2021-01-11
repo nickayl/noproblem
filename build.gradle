@@ -2,8 +2,8 @@ plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.4.21'
 }
 
-group = 'org.javando.http.problem'
-version = '0.1.DEV'
+group 'org.javando.noproblem'
+version '0.8.BETA'
 
 repositories {
     mavenCentral()
