@@ -124,11 +124,11 @@ class GsonProvider @JvmOverloads constructor(gson: Gson = Gson(),
     }
 
     override fun newDateValue(dateString: String): JsonDate {
-        return GsonJsonDateInput(dateString, null, this)
+        return GsonJsonDateInput(dateString, null)
     }
 
     override fun newDateValue(value: Date): JsonDate {
-        return GsonJsonDateInput(null, value, this)
+        return GsonJsonDateInput(null, value)
     }
 }
 
@@ -145,8 +145,8 @@ class ProblemTypeAdapter(private val provider: GsonProvider) : TypeAdapter<Probl
 
 
         p.extensions.forEach { other ->
-            val name = other.first
-            var value = other.second as GsonJsonValue
+            val name = other.key
+            var value = other.value as GsonJsonValue
             val element = value.element
 
             if(value is JsonDate) {

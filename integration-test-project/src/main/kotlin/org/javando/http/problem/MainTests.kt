@@ -6,15 +6,6 @@ import java.util.*
 
 
 fun main() {
-    //val provider = GsonProvider()
-
-//    val config = ProblemConfigurer.instance
-//        .setDateFormat("dd-MM-yyyy")
-//        .setDateIdentifier("""ciao""")
-//        .setJsonProvider(GsonProvider())
-
-//    val p = Problem
-//        .create(config);
     val provider = GsonProvider()
 
     val p = Problem.create(provider)

@@ -3,35 +3,41 @@ package org.javando.http.problem.impl
 import org.javando.http.problem.*
 import java.net.URI
 
-internal class ProblemReferenceImplementation constructor(
+internal class ProblemReferenceImplementation @JvmOverloads constructor(
     override val title: String,
-    override var type: URI,
+    override var type: URI = URI("about:blank"),
     override val status: Int,
     override val details: String?,
     override val instance: URI?,
 ) : Problem() {
 
-    override val extensions: MutableList<Pair<String, JsonValue>> = mutableListOf()
+    override val extensions: Map<String, JsonValue> = mutableMapOf()
+    private val _internalExtensions: MutableMap<String, JsonValue> = extensions as MutableMap<String, JsonValue>
 
     override fun toJson(): String {
         return JsonValueKt.Companion.provider.toJson(this)
     }
 
+    override fun toJsonObject(): JsonObject {
+        TODO("Not yet implemented")
+    }
+
     internal class Builder : ProblemBuilder() {
 
         override fun build(): Problem {
-            if(type == null || title == null || title!!.isBlank())
-                throw ProblemBuilderException("type or title values cannot be empty")
+            if (title == null || title!!.isBlank())
+                throw ProblemBuilderException("title value cannot be null or empty")
+            else if( kotlin.runCatching { HttpStatus.valueOf(status!!) }.isFailure)
+                throw ProblemBuilderException("The provided HTTP Status code '$status' is invalid")
 
-            return ProblemReferenceImplementation( title ?: "", type!!, status!!, details, instance)
+
+            return ProblemReferenceImplementation(title!!, type, status!!, details, instance)
                 .apply {
-                    this.extensions.addAll(super.extensions)
+                    this._internalExtensions.putAll(super.extensions)
+
                 }
         }
     }
-
-    //    override fun builder(provider: JsonProvider): ProblemBuilder = Builder(provider)
-//    override fun builder(): ProblemBuilder = Builder(this.provider)
 }
 
 

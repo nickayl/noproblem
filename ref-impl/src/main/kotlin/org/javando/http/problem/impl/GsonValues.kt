@@ -46,24 +46,19 @@ class GsonJsonInt(override val int: Int) : GsonJsonValue(JsonPrimitive(int)), Js
 class GsonJsonFloat(override val float: Float) : GsonJsonValue(JsonPrimitive(float)), JsonFloat
 class GsonJsonDouble(override val double: Double) : GsonJsonValue(JsonPrimitive(double)), JsonDouble
 class GsonJsonBoolean(override val boolean: Boolean) : GsonJsonValue(JsonPrimitive(boolean)), JsonBoolean
-class GsonJsonDateInput(string: String? = null, date: Date? = null, provider: JsonProvider) : GsonJsonValue(), JsonDate {
+class GsonJsonDateInput @JvmOverloads constructor(string: String? = null, date: Date? = null) : GsonJsonValue(), JsonDate {
     init {
         if(string == null && date == null)
             throw IllegalArgumentException("Cannot create a JsonDate with both string and date object null!")
-        this.element = JsonPrimitive(string ?: provider.dateFormatPattern?.format(date))
+        this.element = JsonPrimitive(string ?: provider.dateFormatPattern.format(date))
     }
 
-    override val string: String = string?.also { provider.dateFormatPattern!!.parse(string) } ?: provider.dateFormatPattern!!.format(date)
+    override val string: String = string?.also { provider.dateFormatPattern.parse(string) } ?: provider.dateFormatPattern.format(date)
     override val date = date ?: Optional.ofNullable(provider.dateFormatPattern)
                 .orElseThrow { JsonDate.MissingDateFormatException("No date format specified. Cannot parse date '$string'.Add it in your JsonProvider instance") }
                 .parse(string)
-                ?: throw JsonDate.InvalidDateStringException("Cannot parse date '$string' with the provided date pattern '${provider.dateFormatPattern}'")
+                ?: throw JsonDate.InvalidDateStringException("Cannot parse date '$string' with the provided date pattern '${provider.dateFormatPattern.toPattern()}'")
 }
-
-//class GsonJsonDateOutput (override val date: Date, provider: JsonProvider) : GsonJsonValue(JsonPrimitive(provider.dateFormatPattern!!.format(date))), JsonDate {
-//
-//    override val string: String = provider.dateFormatPattern!!.format(date)
-//}
 
 class GsonJsonArray(private val gsonArray: com.google.gson.JsonArray) : GsonJsonValue(gsonArray), JsonArray {
 

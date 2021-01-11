@@ -16,6 +16,8 @@
 
 package org.javando.http.problem;
 
+import org.javando.http.problem.annotation.Nullable;
+
 /**
  * Enumeration of HTTP status codes.
  *
