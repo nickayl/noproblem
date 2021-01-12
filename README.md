@@ -19,10 +19,10 @@ allprojects {
 
 Then, add the dependency to your project-local build.gradle :
 ``` groovy
-implementation 'com.github.cyclonesword:noproblem:0.8.BETA'
+implementation 'com.github.cyclonesword.noproblem:no-problem-api:0.8.BETA'
 /* you need to add a provider's implementation.
    for now there is only the gson-provider available: */
-implementation 'com.github.cyclonesword:noproblem-gson-provider:0.8.BETA'
+ implementation 'com.github.cyclonesword.noproblem:gson-provider:0.8.BETA'
 ```
 #### Maven
 First you have to add the jitpack repository to your pom.xml file:
@@ -36,18 +36,18 @@ First you have to add the jitpack repository to your pom.xml file:
 ```
 Then add the dependency inside the `<dependencies>` tag:
 ``` xml
-<dependency>  
-	<groupId>com.github.cyclonesword</groupId>  
-	<artifactId>noproblem</artifactId>  
-	<version>0.8.BETA</version>  
+<dependency>
+	<groupId>com.github.cyclonesword.noproblem</groupId>
+	<artifactId>no-problem-api</artifactId>
+	<version>0.8.BETA</version>
 </dependency>  
   
 <!-- you need to add a provider's implementation. 
 For now there is only the gson-provider available: -->  
-<dependency>  
-	<groupId>com.github.cyclonesword</groupId>  
-	<artifactId>noproblem-gson-provider</artifactId>  
-	<version>0.8.BETA</version>  
+<dependency>
+	<groupId>com.github.cyclonesword.noproblem</groupId>
+	<artifactId>gson-provider</artifactId>
+	<version>0.8.BETA</version>
 </dependency>
 ```
 
