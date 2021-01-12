@@ -19,7 +19,7 @@ allprojects {
 
 Then, add the dependency to your project-local build.gradle :
 ``` groovy
-implementation 'com.github.cyclonesword:noproblem-api:0.8.BETA'
+implementation 'com.github.cyclonesword:noproblem:0.8.BETA'
 /* you need to add a provider's implementation.
    for now there is only the gson-provider available: */
 implementation 'com.github.cyclonesword:noproblem-gson-provider:0.8.BETA'
@@ -38,7 +38,7 @@ Then add the dependency inside the `<dependencies>` tag:
 ``` xml
 <dependency>  
 	<groupId>com.github.cyclonesword</groupId>  
-	<artifactId>noproblem-api</artifactId>  
+	<artifactId>noproblem</artifactId>  
 	<version>0.8.BETA</version>  
 </dependency>  
   
