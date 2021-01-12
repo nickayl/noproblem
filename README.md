@@ -1,5 +1,5 @@
 # NoProblem - HTTP APIs error messages made easy
-[![](https://jitpack.io/v/cyclonesword/android-view-slider.svg)](https://jitpack.io/#cyclonesword/android-view-slider) <br>
+[![](https://jitpack.io/v/cyclonesword/noproblem.svg)](https://jitpack.io/#cyclonesword/noproblem) <br>
 Handle your API endpoints errors in  a ****JSON**  Object** using the **[RFC 7807](https://tools.ietf.org/html/rfc7807)** standard format.
 
 
