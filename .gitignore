@@ -13,7 +13,8 @@
 /captures
 .externalNativeBuild
 .cxx
-.idea
+../.idea
 */build/
 /integration-test-project
 /gson-provider
+/target
