@@ -132,3 +132,9 @@ problem.getExtensionValue<CreditInfo>("credit_info")
 // Returns the CreditInfo instance or null if there's no credit_info extension member
 val creditInfo = problem.getExtensionValue<CreditInfo>("credit_info")
 ```
+
+
+## - Get Involved!
+Please consider to support this library by contributing to its development. 
+Email me at dom.aiello90@gmail.com if you have any question .
+
