@@ -2,7 +2,20 @@ package org.javando.http.problem
 
 import java.util.*
 
-interface JsonValueKt {
+/**
+* The base class for all JsonValue types.
+*
+* To create a new JsonValue type, you can use the provider's `newValue` instance creators.
+*
+* ```
+* var jsonProvider = GsonProvider();
+* var myValue = jsonProvider.newValue("My json string");
+* ```
+*
+* Usually you do not directly use this class, since the [Problem] class
+* has its own helper methods to fully build a <code>Problem</code> instance.
+ */
+interface JsonValue {
     //val jsonString: String
     val isObject: Boolean
         get() = false

@@ -27,7 +27,7 @@ interface JsonProvider {
 
     fun newValue(string: String) : JsonString
     fun newDateValue(dateString: String) : JsonDate
-    fun newDateValue(value: Date): JsonDate
+    fun newValue(value: Date): JsonDate
     fun newValue(int: Int) : JsonInt
     fun newValue(boolean: Boolean) : JsonBoolean
     fun newValue(float: Float) : JsonFloat

@@ -2,10 +2,8 @@ package org.javando.http.problem;
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.lang.Exception
 
 import java.net.URI
-import java.text.SimpleDateFormat
 import java.util.*
 
 val log: Logger = LoggerFactory.getLogger(Problem::class.java)
@@ -69,12 +67,12 @@ abstract class ProblemBuilder(protected val jsonProvider: JsonProvider) {
         return this
     }
 
-    open fun addExtension(name: String, value: String) = addExtensionInternal(name, JsonValue.of(value))
-    open fun addExtension(name: String, value: Int) = addExtensionInternal(name, JsonValue.of(value))
-    open fun addExtension(name: String, value: Float) = addExtensionInternal(name, JsonValue.of(value))
-    open fun addExtension(name: String, value: Double) = addExtensionInternal(name, JsonValue.of(value))
-    open fun addExtension(name: String, value: Date) = addExtensionInternal(name, JsonValue.of(value))
-    open fun addExtension(name: String, value: Any) = addExtensionInternal(name, JsonValue.of(value))
+    open fun addExtension(name: String, value: String) = addExtensionInternal(name, jsonProvider.newValue(value))
+    open fun addExtension(name: String, value: Int) = addExtensionInternal(name, jsonProvider.newValue(value))
+    open fun addExtension(name: String, value: Float) = addExtensionInternal(name, jsonProvider.newValue(value))
+    open fun addExtension(name: String, value: Double) = addExtensionInternal(name, jsonProvider.newValue(value))
+    open fun addExtension(name: String, value: Date) = addExtensionInternal(name, jsonProvider.newValue(value))
+    open fun addExtension(name: String, value: Any) = addExtensionInternal(name, jsonProvider.newValue(value))
 
     private fun addExtensionInternal(name: String, value: JsonValue): ProblemBuilder {
         extensions[name] = value
