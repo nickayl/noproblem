@@ -3,6 +3,14 @@
 Handle your API endpoints errors in  a ****JSON**  Object** using the **[RFC 7807](https://tools.ietf.org/html/rfc7807)** standard format.
 
 
+## Requirements
+
+* Java 8+ 
+
+OR
+
+* Kotlin 1.3+ (with jvmTarget >= 1.8)
+
 
 ## Installation instructions
 
