@@ -70,15 +70,31 @@ val provider = GsonProvider()
 #### - Then create your Problem:
 ``` kotlin
 val problem = Problem.create(provider)  
-    .withTitle("Houston, we have a problem!")  
-    .withDetails("We have lost all the oxygen!")  
-    .withStatus(404)  
+    .withType(URI("https://www.myapi.com/errors/insufficient-credit.html"))
+    .withInstance(URI("/perform-transaction"))
+    .withTitle("Insufficient Credit")
+    .withDetails("There's no sufficient credit in the account for the requested transaction")
+    .withStatus(401)
+    .addExtension("account_number", 7699123)
     .build()  
 ```
 
 #### - Finally get your json string:
 ``` kotlin
 val jsonString = problem.toJson()
+ ```
+ 
+ The output will be:
+ 
+ ``` json
+ {
+	"type":"https://www.myapi.com/errors/insufficient-credit.html",
+	"title":"Insufficient Credit",
+	"details":"There's no sufficient credit in the account for the requested transaction",
+	"status":401,
+	"instance":"/perform-transaction",
+	"account_number":7699123
+  }
  ```
 
 ## Customizing the JsonProvider
@@ -125,7 +141,22 @@ val p = Problem.create(provider)
     .addExtension("credit_info", CreditInfo(34.5f, "EUR"))  
     .build()
 ```
-
+The output will be:
+``` json
+{	"type":"https://www.myapi.com/errors/insufficient-credit.html",
+	"title":"Insufficient Credit",
+	"details":"There's no sufficient credit in the account for the requested transaction",
+	"status":401,
+	"instance":"/perform-transaction",
+	"account_number":7699123,
+	"transaction_id":"f23a7600ffd6",
+	"transaction_date":"13/01/2021 05:52:20",
+	"credit_info":{
+			"balance":34.5,
+			"currency":"EUR"
+		}
+	}
+```
 ### - Deserialize a Json String Problem
 
 ``` kotlin
