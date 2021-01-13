@@ -17,7 +17,7 @@ interface ProblemKt {
     val extensions: Map<String, JsonValue>
 
 
-    fun <T> getExtensionValue(name: String) : T?
+    fun <T> getExtensionValue(name: String): T?
     fun toJson(): String
     fun toJsonObject(): JsonObject
 }
@@ -32,28 +32,27 @@ abstract class ProblemBuilder(protected val jsonProvider: JsonProvider) {
 
     protected val extensions = mutableMapOf<String, JsonValue>()
 
-
-    open fun withTitle(title: String): ProblemBuilder {
+    protected open fun title(title: String): ProblemBuilder {
         this.title = title
         return this
     }
 
-    open fun withDetails(details: String): ProblemBuilder {
+    protected open fun details(details: String): ProblemBuilder {
         this.details = details
         return this
     }
 
-    open fun withType(uri: URI): ProblemBuilder {
+    protected open fun type(uri: URI): ProblemBuilder {
         this.type = uri
         return this
     }
 
-    open fun withStatus(status: Int): ProblemBuilder {
+    protected open fun status(status: Int): ProblemBuilder {
         this.status = status
         return this
     }
 
-    open fun withInstance(uri: URI): ProblemBuilder {
+    protected open fun instance(uri: URI): ProblemBuilder {
         this.instance = uri
         return this
     }

@@ -32,12 +32,12 @@ class GsonProvider @JvmOverloads constructor(
 
     override var dateFormatPattern = SimpleDateFormat(datePattern)
 
-    override fun registerExtensionClasses(vararg pairs: Pair<String, Class<*>>) : JsonProvider {
+    override fun registerExtensionClasses(vararg pairs: Pair<String, Class<*>>): JsonProvider {
         pairs.forEach { _extensionClasses[it.first] = it.second }
         return this
     }
 
-    override fun registerExtensionClass(jsonPropertyName: String, klass: Class<*>) : JsonProvider{
+    override fun registerExtensionClass(jsonPropertyName: String, klass: Class<*>): JsonProvider {
         _extensionClasses[jsonPropertyName] = klass
         return this
     }
@@ -76,7 +76,7 @@ class GsonProvider @JvmOverloads constructor(
 
     override fun <T> fromJson(json: String, klass: Class<T>): T {
         //val gsonElement = gson.fromJson(json, JsonElement::class.java)
-       // val jsonValue = parse(gsonElement)
+        // val jsonValue = parse(gsonElement)
         return gson.fromJson(json, klass)
     }
 
@@ -126,6 +126,7 @@ class GsonProvider @JvmOverloads constructor(
 
     internal fun parse(element: JsonElement, name: String? = null): JsonValue {
         val cannotParseException = IllegalArgumentException("Cannot parse json element $element")
+
         return when (element) {
             is com.google.gson.JsonObject -> GsonJsonObject(this, element)
             is com.google.gson.JsonArray -> GsonJsonArray(this, element)
@@ -168,13 +169,12 @@ class ProblemTypeAdapter(private val provider: GsonProvider) : TypeAdapter<Probl
 
         p.extensions.forEach { other ->
             val name = other.key
-            var value = other.value as GsonJsonValue
-            val element = value.element
+            val value = other.value as GsonJsonValue
 
-            if (value is JsonDate) {
+            if (value is JsonDate)
                 out.name(name).value(value.string)
-            } else
-                provider.get().toJson(element, out.name(name))
+            else
+                provider.get().toJson(value.element, out.name(name))
         }
 
         out.endObject()
@@ -183,20 +183,28 @@ class ProblemTypeAdapter(private val provider: GsonProvider) : TypeAdapter<Probl
     override fun read(reader: JsonReader): Problem {
 
         val parser = JsonParser.parseReader(reader)
+        val globalMessage = "Cannot parse json string '${parser}'"
+
+        if(!parser.isJsonObject)
+            throw InvalidJsonStringException("$globalMessage: It is not a Json object. ")
+
         val obj = parser.asJsonObject
-//        if(obj.size() == 0)
-//            throw InvalidJsonStringException();
 
-        val problem = Problem.create(provider)
+        if(obj.size() == 0)
+            throw InvalidJsonStringException("$globalMessage: The json object is empty!")
 
-        val type = URI(obj.get("type").asString)
-        val title = obj.get("title").asString
+        val problem = Problem.wither(provider)
+
+        val type = URI(obj.get("type")?.asString
+                ?: throw InvalidJsonStringException("$globalMessage: The 'type' property is missing "))
+        val title = obj.get("title")?.asString
+            ?: throw InvalidJsonStringException("$globalMessage: The 'title' property is missing ")
         val detail = obj.get("details")?.asString ?: ""
         val instance = URI(obj.get("instance")?.asString ?: "")
-        val status = obj.get("status")?.runCatching { asInt }?.getOrNull()
-            ?: throw IllegalStateException("HTTP Status code cannot be null")
+        val status = obj.get("status")
+            ?.runCatching { asInt }
+            ?.getOrElse { throw InvalidJsonStringException("$globalMessage: The 'status' property is missing") }!!
 
-        val reserved = listOf("type", "title", "details", "instance", "status")
 
         problem.withType(type)
             .withTitle(title)
@@ -204,7 +212,7 @@ class ProblemTypeAdapter(private val provider: GsonProvider) : TypeAdapter<Probl
             .withInstance(instance)
             .withStatus(status)
 
-        // val entries = obj.entrySet()
+        val reserved = listOf("type", "title", "details", "instance", "status")
         val keys = obj.keySet()
 
         keys.filter { it !in reserved }.forEach {

@@ -11,7 +11,7 @@ fun main() {
         .setDateIdentifier("date")
         .registerExtensionClass("credit_info", CreditInfo::class.java)
 
-    val p = Problem.create(provider)
+    val p = Problem.wither(provider)
         .withType(URI("https://www.myapi.com/errors/insufficient-credit.html"))
         .withInstance(URI("/perform-transaction"))
         .withTitle("Insufficient Credit")

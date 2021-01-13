@@ -12,7 +12,11 @@ public abstract class Problem implements ProblemKt {
         return provider.fromJson(json);
     }
 
-    public static ProblemBuilder create(JsonProvider provider) {
+    public static ProblemBuilderClassic create(JsonProvider provider) {
+        return new ProblemReferenceImplementation.BuilderClassic(provider);
+    }
+
+    public static ProblemBuilderWither wither(JsonProvider provider) {
         return new ProblemReferenceImplementation.Builder(provider);
     }
 

@@ -15,9 +15,9 @@ internal class ProblemReferenceImplementation @JvmOverloads constructor(
     private val _internalExtensions: MutableMap<String, JsonValue> = extensions as MutableMap<String, JsonValue>
 
     override fun <T> getExtensionValue(name: String): T? {
-        if(extensions.containsKey(name)) {
+        if (extensions.containsKey(name)) {
             val value = extensions[name]
-            if(value is JsonAny)
+            if (value is JsonAny)
                 return extensions
                     .runCatching { value.any as T }
                     .onFailure { log.warn("cannot cast '${value.any::class.java} to parameterized type ") }
@@ -36,12 +36,12 @@ internal class ProblemReferenceImplementation @JvmOverloads constructor(
         return jsonProvider.toJsonObject(this)
     }
 
-    internal class Builder(jsonProvider: JsonProvider) : ProblemBuilder(jsonProvider) {
+    internal class Builder(jsonProvider: JsonProvider) : ProblemBuilderWither(jsonProvider) {
 
         override fun build(): Problem {
             if (title == null || title!!.isBlank())
                 throw ProblemBuilderException("title value cannot be null or empty")
-            else if( kotlin.runCatching { HttpStatus.valueOf(status!!) }.isFailure)
+            else if (kotlin.runCatching { HttpStatus.valueOf(status!!) }.isFailure)
                 throw ProblemBuilderException("The provided HTTP Status code '$status' is invalid")
 
 
@@ -52,6 +52,21 @@ internal class ProblemReferenceImplementation @JvmOverloads constructor(
                 }
         }
     }
+
+    internal class BuilderClassic(jsonProvider: JsonProvider) : ProblemBuilderClassic(jsonProvider) {
+
+        override fun build(): Problem {
+            return Builder(jsonProvider)
+                .withType(type)
+                .apply { title?.apply { withTitle(this) } }
+                .apply { details?.apply { withDetails(this) } }
+                .apply { instance?.apply { withInstance(this) } }
+                .apply { status?.apply { withStatus(this) } }
+                .addExtensions(extensions.map { Pair(it.key, it.value) })
+                .build()
+        }
+    }
+
 }
 
 
