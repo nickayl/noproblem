@@ -67,7 +67,7 @@ val provider = GsonProvider()
 
 #### - Then create your Problem:
 ``` kotlin
-val problem = Problem.create(provider)  
+val problem = Problem.wither(provider)  
     .withType(URI("https://www.myapi.com/errors/insufficient-credit.html"))
     .withInstance(URI("/perform-transaction"))
     .withTitle("Insufficient Credit")
@@ -127,7 +127,7 @@ val provider = GsonProvider()
 Extension members, [as defined in the  RFC 7807](https://tools.ietf.org/html/rfc7807#page-6) , are custom json properties that may be used to carry additional information to the API client: 
 ``` kotlin
 val creditInfo = CreditInfo(34.5f, "EUR")
-val p = Problem.create(provider)  
+val p = Problem.wither(provider)  
     .withType(URI("https://www.myapi.com/errors/insufficient-credit.html"))  
     .withInstance(URI("/perform-transaction"))  
     .withTitle("Insufficient Credit")  
