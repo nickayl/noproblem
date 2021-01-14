@@ -18,8 +18,9 @@
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
-        <maven.compiler.release>8</maven.compiler.release>
+<!--        <maven.compiler.release>8</maven.compiler.release>-->
         <maven.compiler.target>8</maven.compiler.target>
+        <maven.compiler.verbose>true</maven.compiler.verbose>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <kotlin.version>1.4.21</kotlin.version>
         <junit.version>5.7.0</junit.version>
