@@ -13,6 +13,7 @@
     <modules>
         <module>api</module>
         <module>gson-provider</module>
+        <module>jackson-provider</module>
     </modules>
 
     <properties>
@@ -64,6 +65,7 @@
                 <artifactId>logback-classic</artifactId>
                 <version>1.2.3</version>
             </dependency>
+
             <dependency>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-stdlib-jdk8</artifactId>

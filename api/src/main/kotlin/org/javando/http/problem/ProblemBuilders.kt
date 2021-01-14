@@ -19,7 +19,7 @@ abstract class ProblemBuilderWither(jsonProvider: JsonProvider) : ProblemBuilder
         return this
     }
 
-    open fun withStatus(status: Int): ProblemBuilderWither {
+    open fun withStatus(status: HttpStatus): ProblemBuilderWither {
         status(status)
         return this;
     }
@@ -47,7 +47,7 @@ abstract class ProblemBuilderClassic(jsonProvider: JsonProvider) : ProblemBuilde
         return this
     }
 
-    public override fun status(status: Int): ProblemBuilderClassic {
+    public override fun status(status: HttpStatus): ProblemBuilderClassic {
         super.status(status)
         return this
     }
@@ -56,4 +56,5 @@ abstract class ProblemBuilderClassic(jsonProvider: JsonProvider) : ProblemBuilde
         super.instance(uri)
         return this
     }
+
 }

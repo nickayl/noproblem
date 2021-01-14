@@ -12,10 +12,11 @@ import java.util.*
 
 class GsonProvider @JvmOverloads constructor(
     gson: Gson = Gson(),
-    override var dateIdentifier: String = "date",
+    @Transient override var dateIdentifier: String = "date",
     datePattern: String = "dd/MM/yyyy hh:mm:ss"
 ) : JsonProvider {
 
+    @Transient
     private var gson: Gson = gson.newBuilder()
         .registerTypeAdapter(Problem::class.java, ProblemTypeAdapter(this))
         .setDateFormat(datePattern)
@@ -27,9 +28,12 @@ class GsonProvider @JvmOverloads constructor(
                 .create()
         }
 
+    @Transient
     override var extensionClasses: Map<String, Class<*>> = mutableMapOf()
+    @Transient
     private val _extensionClasses = extensionClasses as MutableMap
 
+    @Transient
     override var dateFormatPattern = SimpleDateFormat(datePattern)
 
     override fun registerExtensionClasses(vararg pairs: Pair<String, Class<*>>): JsonProvider {
@@ -163,7 +167,7 @@ class ProblemTypeAdapter(private val provider: GsonProvider) : TypeAdapter<Probl
             .name("type").value(p.type.toString())
             .name("title").value(p.title)
             .name("details").value(p.details ?: "")
-            .name("status").value(p.status)
+            .name("status").value(p.status.value())
             .name("instance").value(p.instance?.path ?: "")
 
 
@@ -199,10 +203,11 @@ class ProblemTypeAdapter(private val provider: GsonProvider) : TypeAdapter<Probl
                 ?: throw InvalidJsonStringException("$globalMessage: The 'type' property is missing "))
         val title = obj.get("title")?.asString
             ?: throw InvalidJsonStringException("$globalMessage: The 'title' property is missing ")
+
         val detail = obj.get("details")?.asString ?: ""
         val instance = URI(obj.get("instance")?.asString ?: "")
         val status = obj.get("status")
-            ?.runCatching { asInt }
+            ?.runCatching { HttpStatus.valueOf(asInt) }
             ?.getOrElse { throw InvalidJsonStringException("$globalMessage: The 'status' property is missing") }!!
 
 

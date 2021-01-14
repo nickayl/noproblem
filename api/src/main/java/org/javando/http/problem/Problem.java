@@ -2,7 +2,7 @@ package org.javando.http.problem;
 
 public abstract class Problem implements ProblemKt {
 
-    protected final JsonProvider jsonProvider;
+    protected final transient JsonProvider jsonProvider;
 
     protected Problem(JsonProvider provider) {
         jsonProvider = provider;

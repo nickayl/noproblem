@@ -5,7 +5,7 @@ import java.net.URI
 internal class ProblemReferenceImplementation @JvmOverloads constructor(
     override val title: String,
     override var type: URI = URI("about:blank"),
-    override val status: Int,
+    override val status: HttpStatus,
     override val details: String?,
     override val instance: URI?,
     jsonProvider: JsonProvider
@@ -41,7 +41,7 @@ internal class ProblemReferenceImplementation @JvmOverloads constructor(
         override fun build(): Problem {
             if (title == null || title!!.isBlank())
                 throw ProblemBuilderException("title value cannot be null or empty")
-            else if (kotlin.runCatching { HttpStatus.valueOf(status!!) }.isFailure)
+            else if (kotlin.runCatching { status!! }.isFailure)
                 throw ProblemBuilderException("The provided HTTP Status code '$status' is invalid")
 
 
