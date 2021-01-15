@@ -8,12 +8,13 @@ import org.javando.http.problem.JsonObject
 import java.net.URI
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.regex.Pattern
 
 
 class GsonProvider @JvmOverloads constructor(
     gson: Gson = Gson(),
-    @Transient override var dateIdentifier: String = "date",
-    datePattern: String = "dd/MM/yyyy hh:mm:ss"
+    @Transient var dateIdentifier: String = JsonProvider.Defaults.defaultDateIdentifier,
+    datePattern: String = JsonProvider.Defaults.defaultDatePattern
 ) : JsonProvider {
 
     @Transient
@@ -28,21 +29,31 @@ class GsonProvider @JvmOverloads constructor(
                 .create()
         }
 
-    @Transient
-    override var extensionClasses: Map<String, Class<*>> = mutableMapOf()
-    @Transient
-    private val _extensionClasses = extensionClasses as MutableMap
+    private val camelCaseToSnakeCasePattern = Pattern.compile("(^.)|([a-z])([A-Z])")
 
     @Transient
-    override var dateFormatPattern = SimpleDateFormat(datePattern)
+    val extensionClasses: MutableMap<String, Class<*>> = mutableMapOf()
+
+    @Transient
+    var dateFormatPattern = SimpleDateFormat(datePattern)
 
     override fun registerExtensionClasses(vararg pairs: Pair<String, Class<*>>): JsonProvider {
-        pairs.forEach { _extensionClasses[it.first] = it.second }
+        pairs.forEach { registerExtensionClass(it.first, it.second) }
         return this
     }
 
     override fun registerExtensionClass(jsonPropertyName: String, klass: Class<*>): JsonProvider {
-        _extensionClasses[jsonPropertyName] = klass
+        extensionClasses[jsonPropertyName] = klass
+        return this
+    }
+
+    fun registerExtensionClass(klass: Class<*>): JsonProvider {
+        val jsonPropertyName = camelCaseToSnakeCasePattern
+            .matcher(klass.simpleName)
+            .replaceAll("""\L\1\2_\L\3""")
+            .replaceFirst("_","")
+
+        extensionClasses[jsonPropertyName] = klass
         return this
     }
 
@@ -168,7 +179,7 @@ class ProblemTypeAdapter(private val provider: GsonProvider) : TypeAdapter<Probl
             .name("title").value(p.title)
             .name("details").value(p.details ?: "")
             .name("status").value(p.status.value())
-            .name("instance").value(p.instance?.path ?: "")
+            .name("instance").value(p.instance?.toString() ?: "")
 
 
         p.extensions.forEach { other ->

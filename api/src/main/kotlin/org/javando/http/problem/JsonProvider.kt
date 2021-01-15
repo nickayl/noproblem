@@ -21,9 +21,9 @@ interface JsonProvider {
     fun setDateFormat(pattern: String) : JsonProvider
     fun setDateIdentifier(identifier: String) : JsonProvider
 
-    var extensionClasses: Map<String, Class<*>>
-    var dateFormatPattern: SimpleDateFormat
-    var dateIdentifier: String
+    //var extensionClasses: Map<String, Class<*>>
+    //var dateFormatPattern: SimpleDateFormat
+    //var dateIdentifier: String
 
     fun newValue(string: String) : JsonString
     fun newDateValue(dateString: String) : JsonDate
@@ -33,5 +33,11 @@ interface JsonProvider {
     fun newValue(float: Float) : JsonFloat
     fun newValue(double: Double) : JsonDouble
     fun newValue(any: Any): JsonValue
+
+    companion object Defaults {
+        const val defaultDatePattern = "dd/MM/yyyy hh:mm:ss"
+        const val defaultDateIdentifier = "date"
+    }
 }
+
 

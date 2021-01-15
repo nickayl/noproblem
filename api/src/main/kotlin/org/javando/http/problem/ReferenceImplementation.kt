@@ -20,7 +20,7 @@ internal class ProblemReferenceImplementation @JvmOverloads constructor(
             if (value is JsonAny)
                 return extensions
                     .runCatching { value.any as T }
-                    .onFailure { log.warn("cannot cast '${value.any::class.java} to parameterized type ") }
+                    .onFailure { log.warn("cannot cast '${value.any::class.java} to parameterized type with property name '$name'") }
                     .getOrNull()
             log.warn("Failed to get extension value named '$name' as class '$value'")
         } else
