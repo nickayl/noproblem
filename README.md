@@ -160,6 +160,8 @@ The output will be:
 
 ``` kotlin
 // Returns the CreditInfo instance or null if there's no credit_info extension member
+// If the corresponding string does not match the requested class, 
+// the method internally catches ClassCastException and silently returns null.
 val creditInfo = problem.getExtensionValue<CreditInfo>("credit_info")
 ```
 
