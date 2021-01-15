@@ -50,8 +50,9 @@ class GsonProvider @JvmOverloads constructor(
     fun registerExtensionClass(klass: Class<*>): JsonProvider {
         val jsonPropertyName = camelCaseToSnakeCasePattern
             .matcher(klass.simpleName)
-            .replaceAll("""\L\1\2_\L\3""")
+            .replaceAll("""${'$'}1${'$'}2_${'$'}3""")
             .replaceFirst("_","")
+            .toLowerCase()
 
         extensionClasses[jsonPropertyName] = klass
         return this

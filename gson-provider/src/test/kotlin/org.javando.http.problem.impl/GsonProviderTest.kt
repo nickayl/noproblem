@@ -38,6 +38,14 @@ internal class GsonProviderTest {
     }
 
     @Test
+    fun registerExtensionClassWithoutPropertyName() {
+        provider.registerExtensionClass(CreditInfo::class.java)
+        assertTrue(provider.extensionClasses.isNotEmpty())
+        assertTrue(provider.extensionClasses.containsKey("credit_info"))
+        assertEquals(provider.extensionClasses["credit_info"]!!.simpleName, CreditInfo::class.java.simpleName)
+    }
+
+    @Test
     fun setDateFormat() {
         provider.setDateFormat("dd/MM/yyyy")
         assertNotNull(provider.dateFormatPattern)
