@@ -17,10 +17,10 @@ internal class ProblemReferenceImplementation @JvmOverloads constructor(
     override fun <T> getExtensionValue(name: String): T? {
         if (extensions.containsKey(name)) {
             val value = extensions[name]
-            if (value is JsonAny)
+            if (value is JsonValue)
                 return extensions
-                    .runCatching { value.any as T }
-                    .onFailure { log.warn("cannot cast '${value.any::class.java} to parameterized type with property name '$name'") }
+                    .runCatching { value.value as T }
+                    .onFailure { log.warn("cannot cast '${value.value::class.java} to parameterized type with property name '$name'") }
                     .getOrNull()
             log.warn("Failed to get extension value named '$name' as class '$value'")
         } else

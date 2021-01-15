@@ -28,6 +28,7 @@ interface JsonValue {
     fun asObject(): JsonObject = throw UnsupportedOperationException("Not implemented")
 
     val provider: JsonProvider
+    val value: Any
 
     fun asString() = runCatching { this as JsonString }.getOrElse { throw ClassCastException("Cannot cast a ${this::class.java.simpleName} instance to a JsonString object") }
     fun asInt() = runCatching { this as JsonInt }.getOrElse { throw ClassCastException("Cannot cast a ${this::class.java.simpleName} instance to a JsonInt object") }

@@ -11,7 +11,7 @@ import org.junit.jupiter.api.TestInstance
 import java.net.URI
 import java.util.*
 
-@TestInstance(value = TestInstance.Lifecycle.PER_CLASS)
+//@TestInstance(value = TestInstance.Lifecycle.PER_CLASS)
 internal class GsonProviderTest {
 
     private lateinit var provider: GsonProvider
@@ -50,6 +50,7 @@ internal class GsonProviderTest {
         provider.setDateFormat("dd/MM/yyyy")
         assertNotNull(provider.dateFormatPattern)
         assertFalse(provider.dateFormatPattern.toPattern() == JsonProvider.defaultDatePattern)
+        assertTrue(provider.dateFormatPattern.toPattern() == "dd/MM/yyyy")
     }
 
     @Test
@@ -58,6 +59,7 @@ internal class GsonProviderTest {
         assertTrue(provider.dateIdentifier == JsonProvider.defaultDateIdentifier)
         provider.setDateIdentifier("myDate")
         assertFalse(provider.dateIdentifier == JsonProvider.defaultDateIdentifier)
+        assertTrue(provider.dateIdentifier == "myDate")
     }
 
     @Test
@@ -80,7 +82,20 @@ internal class GsonProviderTest {
         assertTrue(URI.create("https://www.myapi.com/errors/insufficient-credit.html") == problem.type)
         assertTrue(URI.create("/perform-transaction") == problem.instance)
         assertTrue(HttpStatus.FORBIDDEN == problem.status)
+        assertEquals("f23a7600ffd6", problem.getExtensionValue<String>("transaction_id"))
+        assertEquals(7699123, problem.getExtensionValue<Int>("account_number"))
         assertEquals(4, problem.extensions.size)
+
+        val expDate = problem.getExtensionValue<Date>("transaction_date")
+        val calendar = Calendar.getInstance()
+        calendar.time = expDate
+
+        assertEquals(calendar.get(Calendar.YEAR), 2021)
+        assertEquals(calendar.get(Calendar.MONTH), 0)
+        assertEquals(calendar.get(Calendar.DAY_OF_MONTH), 15)
+        assertEquals(calendar.get(Calendar.HOUR_OF_DAY), 11)
+        assertEquals(calendar.get(Calendar.MINUTE), 0)
+        assertEquals(calendar.get(Calendar.SECOND), 0)
 
         return problem
     }
