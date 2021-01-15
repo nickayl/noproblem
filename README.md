@@ -155,19 +155,19 @@ The output will be:
 		}
 	}
 ```
-### - Deserialize a Json String Problem
 
-``` kotlin
-val jsonString = "...";  
-val problem = Problem.from(jsonString, provider)
-problem.getExtensionValue<CreditInfo>("credit_info")
-```
 ### - Get extension members
-
 
 ``` kotlin
 // Returns the CreditInfo instance or null if there's no credit_info extension member
 val creditInfo = problem.getExtensionValue<CreditInfo>("credit_info")
+```
+
+### - Deserialize a Json String Problem
+
+``` kotlin
+val jsonString = "...";  
+val problem: Problem = Problem.from(jsonString, provider)
 ```
 
 
