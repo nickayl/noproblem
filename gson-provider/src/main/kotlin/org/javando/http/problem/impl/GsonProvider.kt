@@ -58,6 +58,11 @@ class GsonProvider @JvmOverloads constructor(
         return this
     }
 
+    override fun removeExtensionClass(jsonPropertyName: String): JsonProvider {
+        extensionClasses.remove(jsonPropertyName)
+        return this
+    }
+
     override fun setDateFormat(pattern: String): JsonProvider {
         dateFormatPattern = SimpleDateFormat(pattern)
         return this

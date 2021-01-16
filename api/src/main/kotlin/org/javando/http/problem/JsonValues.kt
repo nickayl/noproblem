@@ -42,11 +42,11 @@ interface JsonValue {
 }
 
 interface JsonObject : JsonValue {
-    fun  <T> readValue(name: String, klass: Class<T>) : T
+    fun  <T> readValue(name: String, klass: Class<T>) : T?
 }
 
 interface JsonArray : JsonValue {
-    fun <T> readValue(position: Int, klass: Class<T>) : T
+    fun <T> readValue(position: Int, klass: Class<T>) : T?
 }
 
 interface JsonString : JsonValue {

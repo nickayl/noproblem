@@ -18,6 +18,8 @@ interface JsonProvider {
     fun get(): Any
     fun registerExtensionClasses(vararg pairs: Pair<String, Class<*>>) : JsonProvider
     fun registerExtensionClass(jsonPropertyName: String, klass: Class<*>) : JsonProvider
+    fun removeExtensionClass(jsonPropertyName: String) : JsonProvider
+
     fun setDateFormat(pattern: String) : JsonProvider
     fun setDateIdentifier(identifier: String) : JsonProvider
 

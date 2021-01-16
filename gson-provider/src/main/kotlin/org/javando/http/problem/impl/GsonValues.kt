@@ -23,6 +23,7 @@ abstract class GsonJsonValue @JvmOverloads constructor(
 
     override fun asObject(): JsonObject = throw ClassCastException("$this cannot be cast to JsonArray")
     override fun asArray(): JsonArray = throw ClassCastException("$this cannot be cast to JsonArray")
+
 }
 
 class GsonJsonString(provider: GsonProvider, override val string: String) : GsonJsonValue(JsonPrimitive(string),provider,string), JsonString
@@ -55,9 +56,9 @@ class GsonJsonArray(gsonProvider: GsonProvider, private val gsonArray: com.googl
     override val isArray = true
     override fun asArray(): JsonArray = this
 
-    override fun <T> readValue(position: Int, klass: Class<T>): T {
+    override fun <T> readValue(position: Int, klass: Class<T>): T? {
         val value = gsonArray.get(position)
-        return parseValue(klass, value)
+        return parseValue(klass, value, gsonProvider)
     }
 
     override fun toString(): String {
@@ -70,9 +71,9 @@ class GsonJsonObject(provider: GsonProvider, private val gsonObject: com.google.
     override val isObject = true
     override fun asObject(): JsonObject = this
 
-    override fun <T> readValue(name: String, klass: Class<T>): T {
+    override fun <T> readValue(name: String, klass: Class<T>): T? {
         val value = gsonObject.get(name)
-        return parseValue(klass, value)
+        return parseValue(klass, value, gsonProvider)
     }
 
     override fun toString(): String {
@@ -80,16 +81,16 @@ class GsonJsonObject(provider: GsonProvider, private val gsonObject: com.google.
     }
 }
 
-fun <T> JsonValue.parseValue(klass: Class<T>, value: JsonElement?): T {
+fun <T> GsonJsonValue.parseValue(klass: Class<T>, value: JsonElement?, gsonProvider: GsonProvider): T? {
     try {
         return when (klass) {
-            String::class.java -> value?.asString as T
-            Double::class.java -> value?.asDouble as T
-            Int::class.java -> value?.asInt as T
-            Float::class.java -> value?.asFloat as T
-            Boolean::class.java -> value?.asBoolean as T
-            JsonArray::class.java -> value?.asJsonArray as T
-            JsonObject::class.java -> value?.asJsonObject as T
+            String::class.java -> value.runCatching { this?.asString as T }.getOrNull()
+            Double::class.java -> value.runCatching { this?.asDouble as T }.getOrNull()
+            Int::class.java -> value.runCatching { this?.asInt as T }.getOrNull()
+            Float::class.java -> value.runCatching { this?.asFloat as T }.getOrNull()
+            Boolean::class.java -> value.runCatching { this?.asBoolean as T }.getOrNull()
+            JsonArray::class.java -> value.runCatching { GsonJsonArray(gsonProvider, this!!.asJsonArray) as T}.getOrNull()
+            JsonObject::class.java -> value.runCatching { GsonJsonObject(gsonProvider, this!!.asJsonObject) as T}.getOrNull()
             else -> throw IllegalArgumentException("$klass is incompatible with the object '$value'")
         }
     } catch (e: Exception) {

@@ -20,9 +20,10 @@ interface ProblemKt {
     val extensions: Map<String, JsonValue>
 
 
-    fun <T> getExtensionValue(name: String): T?
     fun toJson(): String
     fun toJsonObject(): JsonObject
+
+    fun <T> getExtensionValue(name: String, klass: Class<T>): T?
 }
 
 abstract class ProblemBuilder(protected val jsonProvider: JsonProvider) {

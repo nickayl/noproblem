@@ -1,6 +1,9 @@
 package org.javando.http.problem
 
+import java.lang.ClassCastException
+import java.lang.Exception
 import java.net.URI
+import kotlin.reflect.safeCast
 
 internal class ProblemReferenceImplementation @JvmOverloads constructor(
     override val title: String,
@@ -14,14 +17,29 @@ internal class ProblemReferenceImplementation @JvmOverloads constructor(
     override val extensions: Map<String, JsonValue> = mutableMapOf()
     private val _internalExtensions: MutableMap<String, JsonValue> = extensions as MutableMap<String, JsonValue>
 
-    override fun <T> getExtensionValue(name: String): T? {
+    override fun <T> getExtensionValue(name: String, klass: Class<T>): T? {
         if (extensions.containsKey(name)) {
             val value = extensions[name]
-            if (value is JsonValue)
-                return extensions
-                    .runCatching { value.value as T }
-                    .onFailure { log.warn("cannot cast '${value.value::class.java} to parameterized type with property name '$name'") }
-                    .getOrNull()
+            if (value is JsonValue) {
+                return try {
+                    when (value.value::class.java) {
+                        klass -> value.value as T?
+                        java.lang.Integer::class.java -> value.value as T?
+                        java.lang.Float::class.java -> value.value as T?
+                        java.lang.Double::class.java -> value.value as T?
+                        java.lang.Boolean::class.java -> value.value as T?
+                        else ->
+                            if (value is JsonObject && klass== JsonObject::class.java) {
+                                value.asObject() as T?
+                            } else if (value is JsonArray && klass == JsonArray::class.java) {
+                                value.asArray() as T?
+                            } else null
+                    }
+                } catch (e: ClassCastException) {
+                    log.warn("cannot cast '${value.value::class.java} to parameterized type with property name '$name'")
+                    null
+                }
+            }
             log.warn("Failed to get extension value named '$name' as class '$value'")
         } else
             log.warn("No registered extension class with name '$name'")

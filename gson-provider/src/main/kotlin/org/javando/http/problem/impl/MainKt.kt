@@ -39,7 +39,7 @@ fun main() {
     println(problemClassic.toJson())
 
     val problem = Problem.from(jsonString, provider)
-    problem.getExtensionValue<CreditInfo>("credit_info")
+    problem.getExtensionValue("credit_info", CreditInfo::class.java)
 
     println(problem.toJson())
     println(problem.toJsonObject())
