@@ -2,6 +2,8 @@ package org.javando.http.problem;
 
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.regex.Pattern
+import kotlin.reflect.KClass
 
 /**
  *  The provider of the JSON facilities. The default provider is GsonProvider.
@@ -39,6 +41,22 @@ interface JsonProvider {
     companion object Defaults {
         const val defaultDatePattern = "dd/MM/yyyy hh:mm:ss"
         const val defaultDateIdentifier = "date"
+        private val camelCaseToSnakeCasePattern = Pattern.compile("(^.)|([a-z])([A-Z])")
+
+        fun toSnakeCase(camelCaseClass: String): String {
+            return camelCaseToSnakeCasePattern.matcher(camelCaseClass)
+                .replaceAll("""${'$'}1${'$'}2_${'$'}3""")
+                .replaceFirst("_","")
+                .toLowerCase()
+        }
+
+        fun <T : Any> toSnakeCase(klass: KClass<T>): String {
+            return toSnakeCase(klass::class.java.simpleName)
+        }
+
+        fun <T> toSnakeCase(klass: Class<T>): String {
+            return toSnakeCase(klass.simpleName)
+        }
     }
 }
 

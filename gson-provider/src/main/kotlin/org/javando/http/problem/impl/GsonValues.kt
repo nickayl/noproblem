@@ -61,6 +61,9 @@ class GsonJsonArray(gsonProvider: GsonProvider, private val gsonArray: com.googl
         return parseValue(klass, value, gsonProvider)
     }
 
+    override val size = gsonArray.size()
+    override val isEmpty = size == 0
+
     override fun toString(): String {
         return gsonArray.toString()
     }

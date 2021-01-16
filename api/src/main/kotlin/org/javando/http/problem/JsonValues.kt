@@ -47,6 +47,8 @@ interface JsonObject : JsonValue {
 
 interface JsonArray : JsonValue {
     fun <T> readValue(position: Int, klass: Class<T>) : T?
+    val size: Int
+    val isEmpty: Boolean
 }
 
 interface JsonString : JsonValue {

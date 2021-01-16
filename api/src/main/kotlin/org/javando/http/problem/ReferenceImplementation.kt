@@ -33,10 +33,12 @@ internal class ProblemReferenceImplementation @JvmOverloads constructor(
                                 value.asObject() as T?
                             } else if (value is JsonArray && klass == JsonArray::class.java) {
                                 value.asArray() as T?
+                            } else if(klass == JsonValue::class.java) {
+                                value as T?
                             } else null
                     }
                 } catch (e: ClassCastException) {
-                    log.warn("cannot cast '${value.value::class.java} to parameterized type with property name '$name'")
+                    log.warn("cannot cast '${value.value::class.java}' to parameterized type '${klass.simpleName}' with property name '$name'")
                     null
                 }
             }
@@ -44,6 +46,10 @@ internal class ProblemReferenceImplementation @JvmOverloads constructor(
         } else
             log.warn("No registered extension class with name '$name'")
         return null
+    }
+
+    override fun <T> getExtensionValue(klass: Class<T>): T? {
+        return getExtensionValue(JsonProvider.toSnakeCase(klass.simpleName), klass)
     }
 
     override fun toJson(): String {

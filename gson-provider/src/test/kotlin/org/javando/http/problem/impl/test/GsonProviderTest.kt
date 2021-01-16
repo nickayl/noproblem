@@ -2,11 +2,9 @@ package org.javando.http.problem.impl.test
 
 import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
-import org.javando.http.problem.HttpStatus
-import org.javando.http.problem.JsonObject
-import org.javando.http.problem.JsonProvider
-import org.javando.http.problem.Problem
+import org.javando.http.problem.*
 import org.javando.http.problem.impl.GsonProvider
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -15,7 +13,6 @@ import org.slf4j.LoggerFactory
 import java.lang.Exception
 import java.net.URI
 import java.util.*
-import kotlin.test.asserter
 
 //@TestInstance(value = TestInstance.Lifecycle.PER_CLASS)
 internal class GsonProviderTest {
@@ -24,6 +21,7 @@ internal class GsonProviderTest {
     private val log = LoggerFactory.getLogger(GsonProviderTest::class.java)
 
     private data class CreditInfo(val balance: Double, val currency: String = "EUR")
+    private data class CreditInfo22(val balance2: Double, val currency: String = "EUR")
 
     @BeforeEach
     fun setUp() {
@@ -118,7 +116,7 @@ internal class GsonProviderTest {
     }
 
     @Test
-    fun getExtensionValueShouldFail() {
+    fun getExtensionValueTestShouldGiveNull() {
 
         val problem = Problem.create(provider)
             .title("Hello World!")
@@ -131,14 +129,46 @@ internal class GsonProviderTest {
 
         val creditInfo = problem.getExtensionValue("credit_info", CreditInfo::class.java)
         assertNull(creditInfo)
+    }
 
-        val obj: JsonObject? = problem.getExtensionValue("credit_info", JsonObject::class.java)
+    @Test
+    fun getExtensionValueTestsShouldPass() {
+
+        provider.registerExtensionClass(CreditInfo::class.java)
+
+        val problem = Problem.create(provider)
+            .title("Hello World!")
+            .details("What a wonderful world we live in!")
+            .type(URI.create("/hello-world"))
+            .instance(URI.create("https://www.helloworld.com"))
+            .status(HttpStatus.OK)
+            .addExtension("credit_info", CreditInfo(34.5, "EUR"))
+            .addExtension("credit_info2", CreditInfo22(39.5, "GBP"))
+            .addExtension("currencies", Currency.getAvailableCurrencies())
+            .build()
+
+        val creditInfo = problem.getExtensionValue("credit_info", CreditInfo::class.java)
+        assertNotNull(creditInfo)
+
+        val creditInfoBis = problem.getExtensionValue(CreditInfo::class.java)
+        assertNotNull(creditInfoBis)
+        assertEquals(creditInfo, creditInfoBis)
+
+        val jV = problem.getExtensionValue("credit_info2", JsonValue::class.java)
+        assertNotNull(jV)
+        val obj = jV?.asObject()
         assertNotNull(obj)
 
-        val value = obj?.readValue("balance", Float::class.java)
+        val value = obj?.readValue("balance2", Float::class.java)
         assertNotNull(value)
         assertTrue(value is Float)
-        assertTrue(value == 34.5f)
+        assertEquals(value, 39.5f)
+
+        //val type: Class<out Set<Currency>> = mutableSetOf<Currency>()::class.java
+        val curs = problem.getExtensionValue("currencies", JsonArray::class.java)
+        assertNotNull(curs)
+        assertFalse(curs!!.isEmpty)
+        //println("All currencies are $curs")
     }
 
     @Test

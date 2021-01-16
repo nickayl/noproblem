@@ -29,7 +29,7 @@ class GsonProvider @JvmOverloads constructor(
                 .create()
         }
 
-    private val camelCaseToSnakeCasePattern = Pattern.compile("(^.)|([a-z])([A-Z])")
+    //private val camelCaseToSnakeCasePattern = Pattern.compile("(^.)|([a-z])([A-Z])")
 
     @Transient
     val extensionClasses: MutableMap<String, Class<*>> = mutableMapOf()
@@ -48,11 +48,7 @@ class GsonProvider @JvmOverloads constructor(
     }
 
     fun registerExtensionClass(klass: Class<*>): JsonProvider {
-        val jsonPropertyName = camelCaseToSnakeCasePattern
-            .matcher(klass.simpleName)
-            .replaceAll("""${'$'}1${'$'}2_${'$'}3""")
-            .replaceFirst("_","")
-            .toLowerCase()
+        val jsonPropertyName = JsonProvider.toSnakeCase(klass)
 
         extensionClasses[jsonPropertyName] = klass
         return this
@@ -130,7 +126,9 @@ class GsonProvider @JvmOverloads constructor(
 
     override fun newValue(any: Any): JsonValue {
         val value = gson.toJsonTree(any)
-        return parse(value)
+        return if(extensionClasses.containsKey(JsonProvider.toSnakeCase(any::class.java.simpleName)))
+            tryDeserialize(value, any::class.java)
+        else parse(value)
     }
 
     override fun newDateValue(dateString: String): JsonDate {

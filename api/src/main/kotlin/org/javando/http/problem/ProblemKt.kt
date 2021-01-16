@@ -24,6 +24,7 @@ interface ProblemKt {
     fun toJsonObject(): JsonObject
 
     fun <T> getExtensionValue(name: String, klass: Class<T>): T?
+    fun <T> getExtensionValue(klass: Class<T>): T?
 }
 
 abstract class ProblemBuilder(protected val jsonProvider: JsonProvider) {
