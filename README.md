@@ -168,10 +168,7 @@ val creditInfo = problem.getExtensionValue("credit_info", CreditInfo::class.java
 ### - Get extension members as a raw JsonObject or JsonArray
 
 ``` kotlin
-// Returns the CreditInfo instance or null if there's no credit_info extension member
-// If the corresponding string does not match the requested class, 
-// the method internally catches ClassCastException and silently returns null.
-val creditInfo = problem.getExtensionValue("credit_info", JsonObject::class.java)
+val creditInfo = problem.getExtensionValue("credit_info", JsonObject::class.java) // null if it is not a JsonObject
 // readValue will return null if there's no property with the given name or if the class type is wrong
 val balance: Float? = creditInfo?.readValue("balance", Float::class.java) 
 val currency: String? = creditInfo?.readValue("currency", String::class.java)
