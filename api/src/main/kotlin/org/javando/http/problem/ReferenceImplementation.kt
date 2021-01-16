@@ -29,12 +29,16 @@ internal class ProblemReferenceImplementation @JvmOverloads constructor(
                         java.lang.Double::class.java -> value.value as T?
                         java.lang.Boolean::class.java -> value.value as T?
                         else ->
-                            if (value is JsonObject && klass== JsonObject::class.java) {
+                            if (value is JsonObject && klass == JsonObject::class.java) {
                                 value.asObject() as T?
                             } else if (value is JsonArray && klass == JsonArray::class.java) {
                                 value.asArray() as T?
-                            } else if(klass == JsonValue::class.java) {
+                            } else if (klass == JsonValue::class.java) {
                                 value as T?
+                            } else if (value is JsonAny && klass == JsonObject::class.java) {
+                                value.asObject() as T?
+                            } else if (value is JsonAny && klass == JsonArray::class.java) {
+                                value.asArray() as T?
                             } else null
                     }
                 } catch (e: ClassCastException) {

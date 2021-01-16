@@ -24,8 +24,8 @@ interface JsonValue {
     val isPrimitive: Boolean
         get() = false
 
-    fun asArray(): JsonArray = throw UnsupportedOperationException("Not implemented")
-    fun asObject(): JsonObject = throw UnsupportedOperationException("Not implemented")
+    fun asArray(): JsonArray? = throw UnsupportedOperationException("Not implemented")
+    fun asObject(): JsonObject? = throw UnsupportedOperationException("Not implemented")
 
     val provider: JsonProvider
     val value: Any

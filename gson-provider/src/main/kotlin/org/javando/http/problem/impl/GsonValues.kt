@@ -21,13 +21,24 @@ abstract class GsonJsonValue @JvmOverloads constructor(
 
     //override val jsonString = provider.toJson(element)
 
-    override fun asObject(): JsonObject = throw ClassCastException("$this cannot be cast to JsonArray")
-    override fun asArray(): JsonArray = throw ClassCastException("$this cannot be cast to JsonArray")
+    override fun asObject(): JsonObject? = throw ClassCastException("$this cannot be cast to JsonArray")
+    override fun asArray(): JsonArray? = throw ClassCastException("$this cannot be cast to JsonArray")
 
 }
 
 class GsonJsonString(provider: GsonProvider, override val string: String) : GsonJsonValue(JsonPrimitive(string),provider,string), JsonString
-class GsonJsonAny(provider: GsonProvider, element: JsonElement? = null, override val any: Any) : GsonJsonValue(element, provider,any), JsonAny
+class GsonJsonAny(gsonProvider: GsonProvider,
+                  element: JsonElement,
+                  override val any: Any) : GsonJsonValue(element, gsonProvider,any), JsonAny {
+
+    override fun asObject(): JsonObject? {
+        return gsonProvider.runCatching { parse(element!!).asObject() }.getOrNull()
+    }
+
+    override fun asArray(): JsonArray? {
+        return gsonProvider.runCatching { parse(element!!).asArray() }.getOrNull()
+    }
+}
 class GsonJsonInt(provider: GsonProvider, override val int: Int) : GsonJsonValue(JsonPrimitive(int), provider, int), JsonInt
 class GsonJsonFloat(provider: GsonProvider, override val float: Float) : GsonJsonValue(JsonPrimitive(float), provider, float), JsonFloat
 class GsonJsonDouble(provider: GsonProvider, override val double: Double) : GsonJsonValue(JsonPrimitive(double), provider, double), JsonDouble

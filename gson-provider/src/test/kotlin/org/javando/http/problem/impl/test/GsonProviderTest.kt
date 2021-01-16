@@ -150,6 +150,14 @@ internal class GsonProviderTest {
         val creditInfo = problem.getExtensionValue("credit_info", CreditInfo::class.java)
         assertNotNull(creditInfo)
 
+        val creditInfoTris = problem.getExtensionValue("credit_info", JsonObject::class.java)
+        assertNotNull(creditInfoTris)
+        val balance = creditInfoTris!!.readValue("balance", Float::class.java)
+        val cur = creditInfoTris.readValue("currency", String::class.java)
+        assertNotNull(balance)
+        assertEquals(34.5f, balance)
+        assertEquals("EUR", cur)
+
         val creditInfoBis = problem.getExtensionValue(CreditInfo::class.java)
         assertNotNull(creditInfoBis)
         assertEquals(creditInfo, creditInfoBis)
