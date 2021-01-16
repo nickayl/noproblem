@@ -27,9 +27,9 @@ allprojects {
 
 Then, add the dependency to your project-local build.gradle :
 ``` groovy
-implementation 'com.github.cyclonesword.noproblem:no-problem-api:0.8.BETA+'
+implementation 'com.github.cyclonesword.noproblem:no-problem-api:1.0.+'
 /* Gson provider or another of your preference */
- implementation 'com.github.cyclonesword.noproblem:gson-provider:0.8.BETA+'
+ implementation 'com.github.cyclonesword.noproblem:gson-provider:1.0.+'
 ```
 #### Maven
 First you have to add the jitpack repository to your pom.xml file:
@@ -46,14 +46,14 @@ Then add the dependency inside the `<dependencies>` tag:
 <dependency>
 	<groupId>com.github.cyclonesword.noproblem</groupId>
 	<artifactId>no-problem-api</artifactId>
-	<version>[0.8.BETA,)</version>
+	<version>[1.0.,)</version>
 </dependency>  
   
 <!-- Gson provider or another of your preference -->  
 <dependency>
 	<groupId>com.github.cyclonesword.noproblem</groupId>
 	<artifactId>gson-provider</artifactId>
-	<version>[0.8.BETA,)</version>
+	<version>[1.0.,)</version>
 </dependency>
 ```
 
@@ -156,13 +156,25 @@ The output will be:
 	}
 ```
 
-### - Get extension members
+### - Get extension members as registered custom class
 
 ``` kotlin
 // Returns the CreditInfo instance or null if there's no credit_info extension member
 // If the corresponding string does not match the requested class, 
 // the method internally catches ClassCastException and silently returns null.
-val creditInfo = problem.getExtensionValue<CreditInfo>("credit_info")
+val creditInfo = problem.getExtensionValue("credit_info", CreditInfo::class.java)
+```
+
+### - Get extension members as a raw JsonObject or JsonArray
+
+``` kotlin
+// Returns the CreditInfo instance or null if there's no credit_info extension member
+// If the corresponding string does not match the requested class, 
+// the method internally catches ClassCastException and silently returns null.
+val creditInfo = problem.getExtensionValue("credit_info", JsonObject::class.java)
+// readValue will return null if there's no property with the given name or if the class type is wrong
+val balance: Float? = creditInfo?.readValue("balance", Float::class.java) 
+val currency: String? = creditInfo?.readValue("currency", String::class.java)
 ```
 
 ### - Deserialize a Json String Problem
