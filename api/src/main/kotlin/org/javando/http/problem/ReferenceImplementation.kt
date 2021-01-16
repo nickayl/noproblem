@@ -64,6 +64,10 @@ internal class ProblemReferenceImplementation @JvmOverloads constructor(
         return jsonProvider.toJsonObject(this)
     }
 
+    override fun toString(): String {
+        return "ProblemReferenceImplementation(title='$title', type=$type, status=$status, details=$details, instance=$instance, extensions=$extensions)"
+    }
+
     internal class Builder(jsonProvider: JsonProvider) : ProblemBuilderWither(jsonProvider) {
 
         override fun build(): Problem {

@@ -6,7 +6,7 @@
 
     <artifactId>no-problem</artifactId>
     <groupId>org.javando.http</groupId>
-    <version>0.8.1.BETA</version>
+    <version>1.0.RC3</version>
     <packaging>pom</packaging>
     <name>no-problem</name>
 
@@ -28,6 +28,7 @@
         <!--        <kotlin.compiler.incremental>true</kotlin.compiler.incremental>-->
         <kotlin.code.style>official</kotlin.code.style>
         <kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
+        <library.version>1.0.RC3</library.version>
     </properties>
 
     <repositories>
@@ -97,8 +98,7 @@
             <dependency>
                 <groupId>org.javando.http</groupId>
                 <artifactId>no-problem-api</artifactId>
-                <version>0.8.1.BETA</version>
-                <scope>compile</scope>
+                <version>${library.version}</version>
             </dependency>
 
             <!-- https://mvnrepository.com/artifact/org.hamcrest/hamcrest -->
@@ -192,6 +192,24 @@
                         </execution>
                     </executions>
                 </plugin>
+<!--                <plugin>-->
+<!--                    <artifactId>maven-assembly-plugin</artifactId>-->
+<!--                    <version>3.3.0</version>-->
+<!--                    <configuration>-->
+<!--                        <descriptorRefs>-->
+<!--                            <descriptorRef>jar-with-dependencies</descriptorRef>-->
+<!--                        </descriptorRefs>-->
+<!--                    </configuration>-->
+<!--                    <executions>-->
+<!--                        <execution>-->
+<!--                            <id>make-assembly</id> &lt;!&ndash; this is used for inheritance merges &ndash;&gt;-->
+<!--                            <phase>package</phase> &lt;!&ndash; bind to the packaging phase &ndash;&gt;-->
+<!--                            <goals>-->
+<!--                                <goal>single</goal>-->
+<!--                            </goals>-->
+<!--                        </execution>-->
+<!--                    </executions>-->
+<!--                </plugin>-->
 <!--                <plugin>-->
 <!--                    <groupId>org.apache.maven.plugins</groupId>-->
 <!--                    <artifactId>maven-jar-plugin</artifactId>-->
