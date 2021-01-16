@@ -119,6 +119,7 @@ internal class GsonProviderTest {
 
     @Test
     fun getExtensionValueShouldFail() {
+
         val problem = Problem.create(provider)
             .title("Hello World!")
             .details("What a wonderful world we live in!")
@@ -132,8 +133,12 @@ internal class GsonProviderTest {
         assertNull(creditInfo)
 
         val obj: JsonObject? = problem.getExtensionValue("credit_info", JsonObject::class.java)
-        val value = obj?.readValue("balance", Int::class.java)
-        println(value)
+        assertNotNull(obj)
+
+        val value = obj?.readValue("balance", Float::class.java)
+        assertNotNull(value)
+        assertTrue(value is Float)
+        assertTrue(value == 34.5f)
     }
 
     @Test
