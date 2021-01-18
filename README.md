@@ -2,7 +2,7 @@
 [![](https://jitpack.io/v/cyclonesword/noproblem.svg)](https://jitpack.io/#cyclonesword/noproblem) 
 [![](https://badgen.net/badge/java/8+/green)](https://jitpack.io/#cyclonesword/noproblem)
 [![](https://badgen.net/badge/kotlin/1.3+/green)](https://jitpack.io/#cyclonesword/noproblem)
-[![](https://badgen.net/badge/license/Apache 2.0/blue)](https://jitpack.io/#cyclonesword/noproblem)
+[![](https://badgen.net/badge/license/Apache%202.0/blue)](https://jitpack.io/#cyclonesword/noproblem)
 <br>
 Handle your API endpoints errors in  a ****JSON**  Object** using the **[RFC 7807](https://tools.ietf.org/html/rfc7807)** standard format.
 
