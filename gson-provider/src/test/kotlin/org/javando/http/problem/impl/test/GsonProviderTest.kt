@@ -82,11 +82,30 @@ internal class GsonProviderTest {
     }
 
     @Test
-    fun addStacktrace() {
+    fun addStacktraceDepth() {
         try {
             testProblem.extensions["ciao"]!!.asArray()
         } catch (e: Exception) {
-            val p = testProblemBuilder.addExtension(e.stackTrace, depth = 5, "*junit*").build()
+            val p = testProblemBuilder.addExtension(e.stackTrace, depth = 3).build()
+            assertFalse(p.extensions.isEmpty())
+            assertTrue(p.extensions.containsKey("stacktrace"))
+            assertTrue(p.extensions["stacktrace"]!!.isArray)
+            val array = p.extensions["stacktrace"]!!.asArray()!!
+            assertFalse(array.isEmpty)
+            assertTrue(array.size == 3)
+        }
+    }
+
+    @Test
+    fun addStacktraceWithAllParams() {
+        try {
+            testProblem.extensions["ciao"]!!.asArray()
+        } catch (e: Exception) {
+            val p = testProblemBuilder.addExtension(
+                e.stackTrace,
+                depth = 5,
+                excludePackages = arrayOf("*junit*", "java.lang.*")
+            ).build()
             assertFalse(p.extensions.isEmpty())
             assertTrue(p.extensions.containsKey("stacktrace"))
             assertEquals(2, p.extensions["stacktrace"]!!.properties.size)
@@ -95,6 +114,7 @@ internal class GsonProviderTest {
             assertTrue(p.extensions["stacktrace"]!!.isArray)
             val array = p.extensions["stacktrace"]!!.asArray()!!
             assertFalse(array.isEmpty)
+            assertTrue(array.size <= 5)
 
             array.asList.forEachIndexed { index, value ->
                 val obj = array.readValue(index, JsonObject::class.java)
@@ -145,8 +165,11 @@ internal class GsonProviderTest {
         try {
             testProblemBuilder.addExtension("credit_info", CreditInfo(34.5, "EUR"))
                 .addExtension("credit_info2", CreditInfo22(39.5, "GBP"))
-            try { URL("http//wrongurl") }
-            catch (e: MalformedURLException) { throw RuntimeException("This is my text!\"", e) }
+            try {
+                URL("http//wrongurl")
+            } catch (e: MalformedURLException) {
+                throw RuntimeException("This is my text!\"", e)
+            }
         } catch (e: Exception) {
             //e.printStackTrace()
             testProblemBuilder.addExtension(e)

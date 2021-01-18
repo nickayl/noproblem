@@ -97,7 +97,7 @@ abstract class ProblemBuilder(protected val jsonProvider: JsonProvider) {
         vararg excludePackages: String = arrayOf()
     ): ProblemBuilder {
         val ps = Properties()
-        ps[JsonValue.stacktracePropertyKeyDepth] = depth
+        ps[JsonValue.stacktracePropertyKeyDepth] = if(depth < 0) 1 else depth
         ps[JsonValue.stacktracePropertyKeyExcludedPackages] = excludePackages.toMutableList().apply { addAll(listOf("jdk.*", "java.lang.reflect.*")) }
         return addExtensionInternal("stacktrace",
             jsonProvider.newValue(value, ps).apply { properties.putAll(ps) }
