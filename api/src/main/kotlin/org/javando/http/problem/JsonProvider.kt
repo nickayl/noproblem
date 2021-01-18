@@ -1,6 +1,5 @@
 package org.javando.http.problem;
 
-import java.text.SimpleDateFormat
 import java.util.*
 import java.util.regex.Pattern
 import kotlin.reflect.KClass
@@ -17,7 +16,7 @@ interface JsonProvider {
     fun <T> fromJson(json: String, klass: Class<T>) : T
     fun <T> fromJson(json: JsonValue, klass: Class<T>) : T
 
-    fun get(): Any
+    val get: Any
     fun registerExtensionClasses(vararg pairs: Pair<String, Class<*>>) : JsonProvider
     fun registerExtensionClass(jsonPropertyName: String, klass: Class<*>) : JsonProvider
     fun removeExtensionClass(jsonPropertyName: String) : JsonProvider
@@ -37,6 +36,8 @@ interface JsonProvider {
     fun newValue(float: Float) : JsonFloat
     fun newValue(double: Double) : JsonDouble
     fun newValue(any: Any): JsonValue
+    fun newValue(exception: Throwable): JsonValue
+    fun newValue(stacktraceArray: Array<StackTraceElement>, properties: Properties): JsonArray
 
     companion object Defaults {
         const val defaultDatePattern = "dd/MM/yyyy hh:mm:ss"

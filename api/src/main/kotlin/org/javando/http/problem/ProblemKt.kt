@@ -19,7 +19,6 @@ interface ProblemKt {
     val instance: URI?
     val extensions: Map<String, JsonValue>
 
-
     fun toJson(): String
     fun toJsonObject(): JsonObject
 
@@ -35,6 +34,7 @@ abstract class ProblemBuilder(protected val jsonProvider: JsonProvider) {
     protected var instance: URI? = null
     protected var type: URI = URI("about:blank")
 
+    @Transient
     protected val extensions = mutableMapOf<String, JsonValue>()
 
     protected open fun title(title: String): ProblemBuilder {
@@ -67,7 +67,15 @@ abstract class ProblemBuilder(protected val jsonProvider: JsonProvider) {
     }
 
     open fun addExtensions(pairs: List<Pair<String, JsonValue>>): ProblemBuilder {
-        this.extensions.putAll(pairs)
+        val mutable = pairs.toMutableList()
+
+        mutable.removeIf {
+            if (it.first == "stacktrace")
+                log.warn("Found custom '${it.first}' extension: It is a reserved keyword and will not be added.")
+            it.first == "stacktrace"
+        }
+
+        this.extensions.putAll(mutable)
         return this
     }
 
@@ -78,23 +86,35 @@ abstract class ProblemBuilder(protected val jsonProvider: JsonProvider) {
     open fun addExtension(name: String, value: Double) = addExtensionInternal(name, jsonProvider.newValue(value))
     open fun addExtension(name: String, value: Date) = addExtensionInternal(name, jsonProvider.newValue(value))
     open fun addExtension(name: String, value: Any) = addExtensionInternal(name, jsonProvider.newValue(value))
+    open fun addExtension(exception: Throwable) = addExtensionInternal("exceptions", jsonProvider.newValue(exception))
+    open fun addExtension(name: String, value: ZonedDateTime) = addExtension(name, Date.from(value.toInstant()))
+    open fun addExtension(name: String, value: LocalDateTime) = addExtension(name, value.atZone(ZoneId.systemDefault()))
 
-    open fun addExtension(name: String, value: LocalDateTime) {
-        addExtension(name, value.atZone(ZoneId.systemDefault()))
+    @JvmOverloads
+    open fun addExtension(
+        value: Array<StackTraceElement>,
+        depth: Int = 10,
+        vararg excludePackages: String = arrayOf()
+    ): ProblemBuilder {
+        val ps = Properties()
+        ps[JsonValue.stacktracePropertyKeyDepth] = depth
+        ps[JsonValue.stacktracePropertyKeyExcludedPackages] = excludePackages.toMutableList().apply { addAll(listOf("jdk.*", "java.lang.reflect.*")) }
+        return addExtensionInternal("stacktrace",
+            jsonProvider.newValue(value, ps).apply { properties.putAll(ps) }
+        )
     }
 
-    open fun addExtension(name: String, value: ZonedDateTime) {
-        addExtension(name, Date.from(value.toInstant()))
-    }
-
-    private fun addExtensionInternal(name: String, value: JsonValue): ProblemBuilder {
+    internal fun addExtensionInternal(name: String, value: JsonValue): ProblemBuilder {
         extensions[name] = value
         return this
     }
 
-    abstract fun build(): Problem
+    internal fun addExtensionsInternal(pairs: List<Pair<String, JsonValue>>): ProblemBuilder {
+        pairs.forEach { addExtensionInternal(it.first, it.second) }
+        return this
+    }
 
+    abstract fun build(): Problem
     override fun toString() =
         "ProblemBuilder(jsonProvider=$jsonProvider, details=$details, title=$title, status=$status, instance=$instance, type=$type, extensions=$extensions)"
-
 }

@@ -4,11 +4,13 @@ import com.google.gson.*
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonWriter
 import org.javando.http.problem.*
+import org.javando.http.problem.JsonArray
 import org.javando.http.problem.JsonObject
 import java.net.URI
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.regex.Pattern
+import kotlin.math.min
 
 
 class GsonProvider @JvmOverloads constructor(
@@ -87,9 +89,8 @@ class GsonProvider @JvmOverloads constructor(
         return GsonJsonObject(this, gson.toJsonTree(problem, Problem::class.java) as com.google.gson.JsonObject)
     }
 
-    override fun get(): Gson {
-        return gson
-    }
+    override val get: Gson
+        get() = gson
 
     override fun <T> fromJson(json: String, klass: Class<T>): T {
         //val gsonElement = gson.fromJson(json, JsonElement::class.java)
@@ -126,7 +127,7 @@ class GsonProvider @JvmOverloads constructor(
 
     override fun newValue(any: Any): JsonValue {
         val value = gson.toJsonTree(any)
-        return if(extensionClasses.containsKey(JsonProvider.toSnakeCase(any::class.java.simpleName)))
+        return if (extensionClasses.containsKey(JsonProvider.toSnakeCase(any::class.java.simpleName)))
             tryDeserialize(value, any::class.java)
         else parse(value)
     }
@@ -141,6 +142,53 @@ class GsonProvider @JvmOverloads constructor(
 
     internal fun tryDeserialize(element: JsonElement, clazz: Class<*>): JsonAny {
         return GsonJsonAny(this, element, gson.fromJson(element, clazz))
+    }
+
+    override fun newValue(stacktraceArray: Array<StackTraceElement>, properties: Properties): JsonArray {
+        val filteredStacktrace = filterStackTrace(stacktraceArray.toMutableList(), properties)
+        return GsonJsonArray(this, gson.toJsonTree(filteredStacktrace).asJsonArray)
+    }
+
+    private fun filterStackTrace(
+        stkArray: MutableList<StackTraceElement>,
+        properties: Properties
+    ): List<StackTraceElement> {
+        if (!properties.containsKey(JsonValue.stacktracePropertyKeyDepth) ||
+            !properties.containsKey(JsonValue.stacktracePropertyKeyExcludedPackages)
+        )
+            return emptyList()
+
+        val depth = properties[JsonValue.stacktracePropertyKeyDepth] as Int
+        val excludedPackages =
+            (properties[JsonValue.stacktracePropertyKeyExcludedPackages] as List<String>).toMutableList()
+
+        val packagesToExclude = excludedPackages
+            .forEachIndexed { index, _ ->
+                excludedPackages[index] = excludedPackages[index]
+                    .replace(".", "\\.")
+                    .replace("*", ".*")
+            }.let { excludedPackages.joinToString("|") }
+
+
+        val regex = Pattern.compile(packagesToExclude)
+
+        return stkArray.apply {
+            removeIf { it.className.matches(regex.toRegex()) }
+        }.also { it.slice(0..min(depth, stkArray.size - 1)) }
+
+    }
+
+    private data class ExceptionInfo(val klass: String, val message: String)
+    override fun newValue(exception: Throwable): JsonValue {
+        var e: Throwable? = exception
+        val list = mutableListOf<ExceptionInfo>()
+
+        while (e != null) {
+            list.add(ExceptionInfo(e::class.java.canonicalName, e.message ?: "No exception message available"))
+            e = e.cause
+        }
+        val gsonArray = gson.toJsonTree(list).asJsonArray
+        return GsonJsonArray(this, gsonArray)
     }
 
     internal fun parse(element: JsonElement, name: String? = null): JsonValue {
@@ -177,6 +225,10 @@ class GsonProvider @JvmOverloads constructor(
 
 class ProblemTypeAdapter(private val provider: GsonProvider) : TypeAdapter<Problem>() {
 
+    private val reserved = listOf("type", "title", "details", "instance", "status")
+    private val gson
+        get() = provider.get
+
     override fun write(out: JsonWriter, p: Problem) {
         out.beginObject()
             .name("type").value(p.type.toString())
@@ -186,14 +238,18 @@ class ProblemTypeAdapter(private val provider: GsonProvider) : TypeAdapter<Probl
             .name("instance").value(p.instance?.toString() ?: "")
 
 
-        p.extensions.forEach { other ->
+        p.extensions.filter { it.key !in reserved }.forEach { other ->
             val name = other.key
             val value = other.value as GsonJsonValue
 
-            if (value is JsonDate)
+            if (value is JsonDate) {
                 out.name(name).value(value.string)
-            else
-                provider.get().toJson(value.element, out.name(name))
+            } else if (name == "stacktrace" && value is JsonArray) {
+                out.name(name).jsonValue(value.element.toString())
+            } else if (name == "exception" && value is JsonArray) {
+                out.name(name).jsonValue(value.element.toString())
+            } else
+                gson.toJson(value.element, out.name(name))
         }
 
         out.endObject()
@@ -204,18 +260,20 @@ class ProblemTypeAdapter(private val provider: GsonProvider) : TypeAdapter<Probl
         val parser = JsonParser.parseReader(reader)
         val globalMessage = "Cannot parse json string '${parser}'"
 
-        if(!parser.isJsonObject)
+        if (!parser.isJsonObject)
             throw InvalidJsonStringException("$globalMessage: It is not a Json object. ")
 
         val obj = parser.asJsonObject
 
-        if(obj.size() == 0)
+        if (obj.size() == 0)
             throw InvalidJsonStringException("$globalMessage: The json object is empty!")
 
         val problem = Problem.wither(provider)
 
-        val type = URI(obj.get("type")?.asString
-                ?: throw InvalidJsonStringException("$globalMessage: The 'type' property is missing "))
+        val type = URI(
+            obj.get("type")?.asString
+                ?: throw InvalidJsonStringException("$globalMessage: The 'type' property is missing ")
+        )
         val title = obj.get("title")?.asString
             ?: throw InvalidJsonStringException("$globalMessage: The 'title' property is missing ")
 
@@ -232,7 +290,6 @@ class ProblemTypeAdapter(private val provider: GsonProvider) : TypeAdapter<Probl
             .withInstance(instance)
             .withStatus(status)
 
-        val reserved = listOf("type", "title", "details", "instance", "status")
         val keys = obj.keySet()
 
         keys.filter { it !in reserved }.forEach {

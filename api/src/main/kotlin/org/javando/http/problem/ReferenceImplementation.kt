@@ -14,8 +14,11 @@ internal class ProblemReferenceImplementation @JvmOverloads constructor(
     jsonProvider: JsonProvider
 ) : Problem(jsonProvider) {
 
-    override val extensions: Map<String, JsonValue> = mutableMapOf()
-    private val _internalExtensions: MutableMap<String, JsonValue> = extensions as MutableMap<String, JsonValue>
+    @Transient
+    private val _internalExtensions: MutableMap<String, JsonValue> = mutableMapOf()
+
+    override val extensions: Map<String, JsonValue>
+        get() = _internalExtensions.toMap()
 
     override fun <T> getExtensionValue(name: String, klass: Class<T>): T? {
         if (extensions.containsKey(name)) {
@@ -56,17 +59,11 @@ internal class ProblemReferenceImplementation @JvmOverloads constructor(
         return getExtensionValue(JsonProvider.toSnakeCase(klass.simpleName), klass)
     }
 
-    override fun toJson(): String {
-        return jsonProvider.toJson(this)
-    }
+    override fun toJson() = jsonProvider.toJson(this)
+    override fun toJsonObject() = jsonProvider.toJsonObject(this)
+    override fun toString() = """ProblemReferenceImplementation(title='$title', type=$type, status=$status, 
+                                 |details=$details, instance=$instance, extensions=$extensions)""".trimMargin()
 
-    override fun toJsonObject(): JsonObject {
-        return jsonProvider.toJsonObject(this)
-    }
-
-    override fun toString(): String {
-        return "ProblemReferenceImplementation(title='$title', type=$type, status=$status, details=$details, instance=$instance, extensions=$extensions)"
-    }
 
     internal class Builder(jsonProvider: JsonProvider) : ProblemBuilderWither(jsonProvider) {
 
@@ -80,7 +77,6 @@ internal class ProblemReferenceImplementation @JvmOverloads constructor(
             return ProblemReferenceImplementation(title!!, type, status!!, details, instance, jsonProvider)
                 .apply {
                     this._internalExtensions.putAll(super.extensions)
-
                 }
         }
     }
@@ -94,7 +90,7 @@ internal class ProblemReferenceImplementation @JvmOverloads constructor(
                 .apply { details?.apply { withDetails(this) } }
                 .apply { instance?.apply { withInstance(this) } }
                 .apply { status?.apply { withStatus(this) } }
-                .addExtensions(extensions.map { Pair(it.key, it.value) })
+                .addExtensionsInternal(extensions.map { Pair(it.key, it.value) })
                 .build()
         }
     }

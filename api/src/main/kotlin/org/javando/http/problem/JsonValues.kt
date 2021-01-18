@@ -29,6 +29,7 @@ interface JsonValue {
 
     val provider: JsonProvider
     val value: Any
+    val properties: Properties
 
     fun asString() = runCatching { this as JsonString }.getOrElse { throw ClassCastException("Cannot cast a ${this::class.java.simpleName} instance to a JsonString object") }
     fun asInt() = runCatching { this as JsonInt }.getOrElse { throw ClassCastException("Cannot cast a ${this::class.java.simpleName} instance to a JsonInt object") }
@@ -36,9 +37,10 @@ interface JsonValue {
     fun asDouble() = runCatching { this as JsonDouble }.getOrElse { throw ClassCastException("Cannot cast a ${this::class.java.simpleName} instance to a JsonDouble object") }
     fun asBoolean() = runCatching { this as JsonBoolean }.getOrElse { throw ClassCastException("Cannot cast a ${this::class.java.simpleName} instance to a JsonBoolean object") }
 
-//    companion object {
-//        lateinit var provider: JsonProvider
-//    }
+    companion object {
+        const val stacktracePropertyKeyDepth = "stacktrace.depth"
+        const val stacktracePropertyKeyExcludedPackages = "stacktrace.excludedPackages"
+    }
 }
 
 interface JsonObject : JsonValue {
@@ -49,6 +51,7 @@ interface JsonArray : JsonValue {
     fun <T> readValue(position: Int, klass: Class<T>) : T?
     val size: Int
     val isEmpty: Boolean
+    val asList: List<JsonValue>
 }
 
 interface JsonString : JsonValue {
