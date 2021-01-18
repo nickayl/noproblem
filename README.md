@@ -1,5 +1,9 @@
 # NoProblem - HTTP APIs error messages made easy
-[![](https://jitpack.io/v/cyclonesword/noproblem.svg)](https://jitpack.io/#cyclonesword/noproblem) <br>
+[![](https://jitpack.io/v/cyclonesword/noproblem.svg)](https://jitpack.io/#cyclonesword/noproblem) 
+[![](https://badgen.net/badge/java/8+/green)](https://jitpack.io/#cyclonesword/noproblem)
+[![](https://badgen.net/badge/kotlin/1.3+/green)](https://jitpack.io/#cyclonesword/noproblem)
+[![](https://badgen.net/badge/license/Apache 2.0/blue)](https://jitpack.io/#cyclonesword/noproblem)
+<br>
 Handle your API endpoints errors in  a ****JSON**  Object** using the **[RFC 7807](https://tools.ietf.org/html/rfc7807)** standard format.
 
 
@@ -27,9 +31,9 @@ allprojects {
 
 Then, add the dependency to your project-local build.gradle :
 ``` groovy
-implementation 'com.github.cyclonesword.noproblem:no-problem-api:1.0.RC4'
+implementation 'com.github.cyclonesword.noproblem:no-problem-api:1.0.RC5'
 /* Gson provider or another of your preference */
- implementation 'com.github.cyclonesword.noproblem:gson-provider:1.0.RC4'
+ implementation 'com.github.cyclonesword.noproblem:gson-provider:1.0.RC5'
 ```
 #### Maven
 First you have to add the jitpack repository to your pom.xml file:
@@ -46,14 +50,14 @@ Then add the dependency inside the `<dependencies>` tag:
 <dependency>
 	<groupId>com.github.cyclonesword.noproblem</groupId>
 	<artifactId>no-problem-api</artifactId>
-	<version>1.0.RC4</version>
+	<version>1.0.RC5</version>
 </dependency>  
   
 <!-- Gson provider or another of your preference -->  
 <dependency>
 	<groupId>com.github.cyclonesword.noproblem</groupId>
 	<artifactId>gson-provider</artifactId>
-	<version>1.0.RC4</version>
+	<version>1.0.RC5</version>
 </dependency>
 ```
 
@@ -182,7 +186,7 @@ val problemClassic = Problem.create(provider)
     .instance(URI("/write-to-database"))  
     .status(HttpStatus.FORBIDDEN)  
     .addExtension(exception) 
-    .addExtension(exception.stackTrace, depth = 5, excludePackages = arrayOf("*junit*", "java.lang.*")) 
+    .addExtension(exception.stackTrace, depth = 3, excludePackages = arrayOf("*junit*", "java.lang.*")) 
     .build()
 ```
 In the code example we have limited the stacktrace depth to only 5 elements and we have also excluded the packages that contains `junit` or starts with `java.lang.` The `*` can be used as an ant matcher. 
