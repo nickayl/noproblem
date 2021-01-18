@@ -27,9 +27,9 @@ allprojects {
 
 Then, add the dependency to your project-local build.gradle :
 ``` groovy
-implementation 'com.github.cyclonesword.noproblem:no-problem-api:1.0.+'
+implementation 'com.github.cyclonesword.noproblem:no-problem-api:1.0.RC4'
 /* Gson provider or another of your preference */
- implementation 'com.github.cyclonesword.noproblem:gson-provider:1.0.+'
+ implementation 'com.github.cyclonesword.noproblem:gson-provider:1.0.RC4'
 ```
 #### Maven
 First you have to add the jitpack repository to your pom.xml file:
@@ -46,14 +46,14 @@ Then add the dependency inside the `<dependencies>` tag:
 <dependency>
 	<groupId>com.github.cyclonesword.noproblem</groupId>
 	<artifactId>no-problem-api</artifactId>
-	<version>[1.0.,)</version>
+	<version>1.0.RC4</version>
 </dependency>  
   
 <!-- Gson provider or another of your preference -->  
 <dependency>
 	<groupId>com.github.cyclonesword.noproblem</groupId>
 	<artifactId>gson-provider</artifactId>
-	<version>[1.0.,)</version>
+	<version>1.0.RC4</version>
 </dependency>
 ```
 
@@ -141,19 +141,98 @@ val p = Problem.wither(provider)
 ```
 The output will be:
 ``` json
-{	"type":"https://www.myapi.com/errors/insufficient-credit.html",
-	"title":"Insufficient Credit",
-	"details":"There's no sufficient credit in the account for the requested transaction",
-	"status":401,
-	"instance":"/perform-transaction",
-	"account_number":7699123,
-	"transaction_id":"f23a7600ffd6",
-	"transaction_date":"13/01/2021 05:52:20",
-	"credit_info":{
-			"balance":34.5,
-			"currency":"EUR"
-		}
-	}
+{
+   "type":"https://www.myapi.com/errors/insufficient-credit.html",
+   "title":"Insufficient Credit",
+   "details":"There's no sufficient credit in the account for the requested transaction",
+   "status":401,
+   "instance":"/perform-transaction",
+   "account_number":7699123,
+   "transaction_id":"f23a7600ffd6",
+   "transaction_date":"13/01/2021 05:52:20",
+   "credit_info":{
+      "balance":34.5,
+      "currency":"EUR"
+   }
+}
+```
+
+### Adding exception and stacktrace as extension members
+
+Althout it is not advisable to add the stacktrace of an occurred exception as a member extensions, it
+can be helpful when debugging a system. It should be avoided in production since exception messages and stacktraces ***contains information on the implementation's internals and therefore can expose your system to security threats***. **Use at your own risk.**
+
+As stated in the [RFC 7807](https://tools.ietf.org/html/rfc7807#page-8) document:
+
+> "When defining a new problem type, the information included must be   
+> carefully vetted.  Likewise, when actually generating a problem --   
+> however it is serialized -- the details given must also be   
+> scrutinized.
+> 
+>    Risks include leaking information that can be exploited to
+> compromise    the system, access to the system, or the privacy of
+> users of the    system."
+
+
+``` kotlin
+val problemClassic = Problem.create(provider)  
+    .title("Authorization Error")  
+    .details("You are not authorized to perform write operations. Please contact the server admin at ...")  
+    .type(URI("https://www.javando.org/api/errors/authorization-write-error"))  
+    .instance(URI("/write-to-database"))  
+    .status(HttpStatus.FORBIDDEN)  
+    .addExtension(exception) 
+    .addExtension(exception.stackTrace, depth = 5, excludePackages = arrayOf("*junit*", "java.lang.*")) 
+    .build()
+```
+In the code example we have limited the stacktrace depth to only 5 elements and we have also excluded the packages that contains `junit` or starts with `java.lang.` The `*` can be used as an ant matcher. 
+An example output could be:
+``` json
+{
+   "type":"https://www.javando.org/api/errors/authorization-write-error",
+   "title":"Authorization Error",
+   "details":"You are not authorized to perform write operations. Please contact the server admin at ...",
+   "status":403,
+   "instance":"/write-to-database",
+   "exceptions":[
+      {
+         "klass":"java.lang.RuntimeException",
+         "message":"Write disabled\""
+      },
+      {
+         "klass":"java.io.IOException",
+         "message":"stream closed"
+      }
+   ],
+   "stacktrace":[
+      {
+         "classLoaderName":"app",
+         "declaringClass":"org.javando.http.problem.impl.test.GsonProviderTest",
+         "methodName":"integrateAll",
+         "fileName":"GsonProviderTest.kt",
+         "lineNumber":152,
+         "format":1
+      },
+      {
+         "moduleName":"java.base",
+         "moduleVersion":"11.0.4",
+         "declaringClass":"java.util.ArrayList",
+         "methodName":"forEach",
+         "fileName":"ArrayList.java",
+         "lineNumber":1540,
+         "format":2
+      },
+      {
+         "moduleName":"java.base",
+         "moduleVersion":"11.0.4",
+         "declaringClass":"java.util.ArrayList",
+         "methodName":"forEach",
+         "fileName":"ArrayList.java",
+         "lineNumber":1540,
+         "format":2
+      }
+   ]
+}
 ```
 
 ### - Get extension members as registered custom class
