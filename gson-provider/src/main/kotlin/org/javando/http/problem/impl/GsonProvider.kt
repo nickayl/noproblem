@@ -81,7 +81,7 @@ class GsonProvider @JvmOverloads constructor(
 
     override fun fromJson(str: String): Problem {
         log.trace("fromJson in ${this::class.java.simpleName} implementation called with string $str");
-        return gson.fromJson(str, Problem::class.java)
+        return gson.runCatching { fromJson(str, Problem::class.java) }.getOrNull() ?: throw InvalidJsonStringException("Invalid Json string given: $str")
     }
 
     override fun toJsonObject(problem: Problem): JsonObject {
@@ -270,18 +270,23 @@ class ProblemTypeAdapter(private val provider: GsonProvider) : TypeAdapter<Probl
 
         val problem = Problem.wither(provider)
 
-        val type = URI(
-            obj.get("type")?.asString
-                ?: throw InvalidJsonStringException("$globalMessage: The 'type' property is missing ")
-        )
-        val title = obj.get("title")?.asString
-            ?: throw InvalidJsonStringException("$globalMessage: The 'title' property is missing ")
+        val typeString = (obj.get("type")?.asString ?: throw InvalidJsonStringException("$globalMessage: The 'type' property is missing "))
+
+        if(typeString.isBlank())
+            throw InvalidJsonStringException("$globalMessage: The type string cannot be empty!")
+
+        val type = URI(typeString)
+
+        val title = obj.get("title")?.asString ?: throw InvalidJsonStringException("$globalMessage: The 'title' property is missing ")
+
+        if(title.isBlank())
+            throw InvalidJsonStringException("$globalMessage: The title string cannot be empty!")
 
         val detail = obj.get("details")?.asString ?: ""
-        val instance = URI(obj.get("instance")?.asString ?: "")
+        val instance = URI(obj.get("instance")?.asString ?: "about:blank")
         val status = obj.get("status")
             ?.runCatching { HttpStatus.valueOf(asInt) }
-            ?.getOrElse { throw InvalidJsonStringException("$globalMessage: The 'status' property is missing") }!!
+            ?.getOrElse { throw InvalidJsonStringException("$globalMessage: The 'status' property is missing or invalid") }!!
 
 
         problem.withType(type)

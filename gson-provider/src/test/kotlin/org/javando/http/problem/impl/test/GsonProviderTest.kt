@@ -4,13 +4,12 @@ import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
 import org.javando.http.problem.*
 import org.javando.http.problem.impl.GsonProvider
-import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.assertThrows
 import org.slf4j.LoggerFactory
-import java.io.File
 import java.lang.Exception
 import java.net.MalformedURLException
 import java.net.URI
@@ -191,7 +190,34 @@ internal class GsonProviderTest {
     }
 
     @Test
-    fun fromJson(): Problem {
+    fun fromJsonWithWrongString() {
+
+        assertThrows<InvalidJsonStringException> { provider.fromJson("") }
+        assertThrows<InvalidJsonStringException> { provider.fromJson("{}") }
+        assertThrows<InvalidJsonStringException> { provider.fromJson("""{ "type": "" }""") }
+        assertThrows<InvalidJsonStringException> { provider.fromJson("""{ "type": "about:blank", "status": 9999 }""") }
+        assertThrows<InvalidJsonStringException> { provider.fromJson("""{ "type": "about:blank", "status": "9999" }""") }
+        assertThrows<InvalidJsonStringException> { provider.fromJson("""{ "type": "about:blank", "status": 403, "instance": "" }""") }
+        assertThrows<InvalidJsonStringException> { provider.fromJson("""{ "type": "about:blank", "status": 403, "instance": "about:blank" }""") }
+        assertThrows<InvalidJsonStringException> { provider.fromJson("""{ "type": "about:blank", "status": 403, "instance": "about:blank", "title": "" }""") }
+
+        assertDoesNotThrow {
+            provider.fromJson("""{ "type": "about:blank", "status": 403, "instance": "about:blank", "title" : "ciao" }""")
+        }
+
+        assertDoesNotThrow {
+            provider.fromJson(""" {
+            |"type":"https://www.myapi.com/errors/insufficient-credit.html",
+            |"title":"Insufficient Credit",
+            |"details":"There's no sufficient credit in the account for the requested transaction",
+            |"status":403,
+            |"instance":"/perform-transaction"} """.trimMargin())
+        }
+
+    }
+
+    @Test
+    fun fromJsonWithRightString(): Problem {
         val problemString = """ {
             |"type":"https://www.myapi.com/errors/insufficient-credit.html",
             |"title":"Insufficient Credit",
@@ -332,7 +358,7 @@ internal class GsonProviderTest {
 
     @Test
     fun toJsonObject() {
-        val problem = fromJson()
+        val problem = fromJsonWithRightString()
         val obj = provider.toJsonObject(problem)
 
         val title = obj.readValue("title", String::class.java)
