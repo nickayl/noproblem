@@ -174,7 +174,7 @@ class GsonProvider @JvmOverloads constructor(
 
         return stkArray.apply {
             removeIf { it.className.matches(regex.toRegex()) }
-        }.let { it.slice(0..min(depth-1, stkArray.size - 1)) }
+        }.slice(0..min(depth-1, stkArray.size - 1))
 
     }
 
