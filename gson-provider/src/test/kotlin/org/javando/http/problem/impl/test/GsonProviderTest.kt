@@ -1,5 +1,6 @@
 package org.javando.http.problem.impl.test
 
+import com.google.gson.Gson
 import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
 import org.javando.http.problem.*
@@ -19,7 +20,7 @@ import java.util.*
 //@TestInstance(value = TestInstance.Lifecycle.PER_CLASS)
 internal class GsonProviderTest {
 
-    private lateinit var provider: GsonProvider
+    private lateinit var provider: JsonProvider
     private lateinit var testProblemBuilder: ProblemBuilderClassic
     private val log = LoggerFactory.getLogger(GsonProviderTest::class.java)
 
@@ -37,6 +38,10 @@ internal class GsonProviderTest {
             .status(HttpStatus.OK)
     }
 
+    private val providerGson
+        get() = provider as GsonProvider
+
+
     private val testProblem: Problem
         get() = testProblemBuilder
             .addExtension("credit_info", CreditInfo(34.5, "EUR"))
@@ -44,40 +49,40 @@ internal class GsonProviderTest {
 
     @Test
     fun getDateFormatPattern() {
-        assertNotNull(provider.dateFormatPattern)
-        assertTrue(provider.dateFormatPattern.toPattern() == JsonProvider.defaultDatePattern)
+        assertNotNull(providerGson.dateFormatPattern)
+        assertTrue(providerGson.dateFormatPattern.toPattern() == JsonProvider.defaultDatePattern)
     }
 
     @Test
     fun registerExtensionClass() {
-        provider.registerExtensionClass("credit_info", CreditInfo::class.java)
-        assertTrue(provider.extensionClasses.isNotEmpty())
-        assertEquals(provider.extensionClasses["credit_info"]!!.simpleName, CreditInfo::class.java.simpleName)
+        providerGson.registerExtensionClass("credit_info", CreditInfo::class.java)
+        assertTrue(providerGson.extensionClasses.isNotEmpty())
+        assertEquals(providerGson.extensionClasses["credit_info"]!!.simpleName, CreditInfo::class.java.simpleName)
     }
 
     @Test
     fun registerExtensionClassWithoutPropertyName() {
-        provider.registerExtensionClass(CreditInfo::class.java)
-        assertTrue(provider.extensionClasses.isNotEmpty())
-        assertTrue(provider.extensionClasses.containsKey("credit_info"))
-        assertEquals(provider.extensionClasses["credit_info"]!!.simpleName, CreditInfo::class.java.simpleName)
+        providerGson.registerExtensionClass(CreditInfo::class.java)
+        assertTrue(providerGson.extensionClasses.isNotEmpty())
+        assertTrue(providerGson.extensionClasses.containsKey("credit_info"))
+        assertEquals(providerGson.extensionClasses["credit_info"]!!.simpleName, CreditInfo::class.java.simpleName)
     }
 
     @Test
     fun setDateFormat() {
-        provider.setDateFormat("dd/MM/yyyy")
-        assertNotNull(provider.dateFormatPattern)
-        assertFalse(provider.dateFormatPattern.toPattern() == JsonProvider.defaultDatePattern)
-        assertTrue(provider.dateFormatPattern.toPattern() == "dd/MM/yyyy")
+        providerGson.setDateFormat("dd/MM/yyyy")
+        assertNotNull(providerGson.dateFormatPattern)
+        assertFalse(providerGson.dateFormatPattern.toPattern() == JsonProvider.defaultDatePattern)
+        assertTrue(providerGson.dateFormatPattern.toPattern() == "dd/MM/yyyy")
     }
 
     @Test
     fun setDateIdentifier() {
-        assertNotNull(provider.dateIdentifier)
-        assertTrue(provider.dateIdentifier == JsonProvider.defaultDateIdentifier)
-        provider.setDateIdentifier("myDate")
-        assertFalse(provider.dateIdentifier == JsonProvider.defaultDateIdentifier)
-        assertTrue(provider.dateIdentifier == "myDate")
+        assertNotNull(providerGson.dateIdentifier)
+        assertTrue(providerGson.dateIdentifier == JsonProvider.defaultDateIdentifier)
+        providerGson.setDateIdentifier("myDate")
+        assertFalse(providerGson.dateIdentifier == JsonProvider.defaultDateIdentifier)
+        assertTrue(providerGson.dateIdentifier == "myDate")
     }
 
     @Test
@@ -190,81 +195,6 @@ internal class GsonProviderTest {
     }
 
     @Test
-    fun fromJsonWithWrongString() {
-
-        assertThrows<InvalidJsonStringException> { provider.fromJson("") }
-        assertThrows<InvalidJsonStringException> { provider.fromJson("{}") }
-        assertThrows<InvalidJsonStringException> { provider.fromJson("""{ "type": "" }""") }
-        assertThrows<InvalidJsonStringException> { provider.fromJson("""{ "type": "about:blank", "status": 9999 }""") }
-        assertThrows<InvalidJsonStringException> { provider.fromJson("""{ "type": "about:blank", "status": "9999" }""") }
-        assertThrows<InvalidJsonStringException> { provider.fromJson("""{ "type": "about:blank", "status": 403, "instance": "" }""") }
-        assertThrows<InvalidJsonStringException> { provider.fromJson("""{ "type": "about:blank", "status": 403, "instance": "about:blank" }""") }
-        assertThrows<InvalidJsonStringException> { provider.fromJson("""{ "type": "about:blank", "status": 403, "instance": "about:blank", "title": "" }""") }
-
-        assertDoesNotThrow {
-            provider.fromJson("""{ "type": "about:blank", "status": 403, "instance": "about:blank", "title" : "ciao" }""")
-        }
-
-        assertDoesNotThrow {
-            provider.fromJson(""" {
-            |"type":"https://www.myapi.com/errors/insufficient-credit.html",
-            |"title":"Insufficient Credit",
-            |"details":"There's no sufficient credit in the account for the requested transaction",
-            |"status":403,
-            |"instance":"/perform-transaction"} """.trimMargin())
-        }
-
-    }
-
-    @Test
-    fun fromJsonWithRightString(): Problem {
-        val problemString = """ {
-            |"type":"https://www.myapi.com/errors/insufficient-credit.html",
-            |"title":"Insufficient Credit",
-            |"details":"There's no sufficient credit in the account for the requested transaction",
-            |"status":403,
-            |"instance":"/perform-transaction",
-            |"account_number":7699123,
-            |"transaction_id":"f23a7600ffd6",
-            |"transaction_date":"15/01/2021 11:00:00",
-            |"credit_info":{"balance":34.5,"currency":"EUR"}}""".trimMargin()
-
-        provider.registerExtensionClass(CreditInfo::class.java)
-        val problem = provider.fromJson(problemString)
-
-        assertTrue("There's no sufficient credit in the account for the requested transaction" == problem.details)
-        assertTrue("Insufficient Credit" == problem.title)
-        assertTrue(URI.create("https://www.myapi.com/errors/insufficient-credit.html") == problem.type)
-        assertTrue(URI.create("/perform-transaction") == problem.instance)
-        assertTrue(HttpStatus.FORBIDDEN == problem.status)
-        assertEquals("f23a7600ffd6", problem.getExtensionValue("transaction_id", String::class.java))
-        assertEquals(7699123, problem.getExtensionValue("account_number", Int::class.java))
-
-        try {
-            val creditInfo = problem.getExtensionValue("credit_info", CreditInfo::class.java)
-            assertEquals(CreditInfo(34.5, "EUR"), creditInfo)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            log.error("Error deserializing ${CreditInfo::class.java}")
-            fail("Deserialization of custom class failed")
-        }
-        assertEquals(4, problem.extensions.size)
-
-        val expDate = problem.getExtensionValue("transaction_date", Date::class.java)
-        val calendar = Calendar.getInstance()
-        calendar.time = expDate
-
-        assertEquals(calendar.get(Calendar.YEAR), 2021)
-        assertEquals(calendar.get(Calendar.MONTH), 0)
-        assertEquals(calendar.get(Calendar.DAY_OF_MONTH), 15)
-        assertEquals(calendar.get(Calendar.HOUR_OF_DAY), 11)
-        assertEquals(calendar.get(Calendar.MINUTE), 0)
-        assertEquals(calendar.get(Calendar.SECOND), 0)
-
-        return problem
-    }
-
-    @Test
     fun getExtensionValueTestShouldGiveNull() {
 
         val creditInfo = testProblem.getExtensionValue("credit_info", CreditInfo::class.java)
@@ -318,25 +248,6 @@ internal class GsonProviderTest {
     }
 
     @Test
-    fun toJson(): String {
-        val problem = testProblem
-
-        val string = provider.toJson(problem)
-        assertFalse(string.isBlank())
-
-        val problemBack = provider.fromJson(string)
-        assertTrue(problemBack.details == problem.details)
-        assertTrue(problemBack.title == problem.title)
-        assertTrue(problemBack.type == problem.type)
-        assertTrue(problemBack.instance == problem.instance)
-        assertTrue(problemBack.status == problem.status)
-        assertEquals(problemBack.extensions.size, problem.extensions.size)
-
-        return string;
-    }
-
-
-    @Test
     fun testNewValues() {
         val number = 10f
         val date = Date()
@@ -348,18 +259,34 @@ internal class GsonProviderTest {
         val newBoolean = provider.newValue(true)
         val newDate = provider.newValue(date)
 
-        assertTrue(newInt.int == number.toInt())
-        assertTrue(newFloat.float == number)
-        assertTrue(newDouble.double == number.toDouble())
-        assertTrue(newString.string == "hello")
-        assertTrue(newBoolean.boolean)
-        assertTrue(newDate.date == date)
+        assertTrue(newInt.int == number.toInt() && newInt.isPrimitive)
+        assertFalse(newInt.isObject || newInt.isArray)
+
+        assertTrue(newFloat.float == number && newFloat.isPrimitive)
+        assertFalse(newFloat.isObject || newFloat.isArray)
+
+        assertTrue(newDouble.double == number.toDouble() && newDouble.isPrimitive)
+        assertFalse(newDouble.isObject || newDouble.isArray)
+
+
+        assertTrue(newString.string == "hello" && newString.isPrimitive)
+        assertFalse(newString.isObject || newString.isArray)
+
+        assertTrue(newBoolean.boolean && newBoolean.isPrimitive)
+        assertFalse(newBoolean.isObject || newBoolean.isArray)
+
+        assertTrue(newDate.date == date && !newDate.isPrimitive)
+        assertFalse(newDate.isObject || newDate.isArray)
+
     }
 
     @Test
     fun toJsonObject() {
-        val problem = fromJsonWithRightString()
+        val problem = testProblem
         val obj = provider.toJsonObject(problem)
+
+        assertNotNull(obj)
+        assertTrue(obj.isObject && !obj.isPrimitive && !obj.isArray)
 
         val title = obj.readValue("title", String::class.java)
         val details = obj.readValue("details", String::class.java)
@@ -371,7 +298,7 @@ internal class GsonProviderTest {
         assertThat(details, allOf(not(nullValue()), not(equalTo("")), equalTo(problem.details)))
         assertThat(typeString, allOf(not(nullValue()), not(equalTo("")), equalTo(problem.type.toString())))
         assertThat(instanceString, allOf(not(nullValue()), not(equalTo("")), equalTo(problem.instance!!.toString())))
-        assertTrue(status == 403)
+        assertTrue(status == 200)
 
         assertEquals(title!!::class.java, String::class.java)
         assertEquals(details!!::class.java, String::class.java)
@@ -384,13 +311,13 @@ internal class GsonProviderTest {
 
         assertEquals(typeUri, problem.type)
         assertEquals(instanceUri, problem.instance)
-
     }
 
 
     @Test
     fun get() {
         assertNotNull(provider.get)
+        assertTrue(provider.get is Gson)
     }
 
 }

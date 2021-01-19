@@ -25,6 +25,11 @@ class InvalidJsonStringException(
     override val cause: Throwable? = null
 ) : JsonParseException(message, cause)
 
+class InvalidJsonValueException(
+    override val message: String?,
+    override val cause: Throwable? = null
+) : JsonParseException(message, cause)
+
 class MissingRequiredMemberException (
     override val message: String?,
     override val cause: Throwable? = null

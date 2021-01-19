@@ -13,10 +13,6 @@ abstract class GsonJsonValue @JvmOverloads constructor(
     override val value: Any
 ) : JsonValue {
 
-    override val isObject = false
-    override val isArray = false
-    override val isPrimitive = false
-
     override val provider: JsonProvider = gsonProvider
     override val properties: Properties = Properties()
 
@@ -29,21 +25,6 @@ abstract class GsonJsonValue @JvmOverloads constructor(
 
 class GsonJsonString(provider: GsonProvider, override val string: String) :
     GsonJsonValue(JsonPrimitive(string), provider, string), JsonString
-
-class GsonJsonAny(
-    gsonProvider: GsonProvider,
-    element: JsonElement,
-    override val any: Any
-) : GsonJsonValue(element, gsonProvider, any), JsonAny {
-
-    override fun asObject(): JsonObject? {
-        return gsonProvider.runCatching { parse(element!!).asObject() }.getOrNull()
-    }
-
-    override fun asArray(): JsonArray? {
-        return gsonProvider.runCatching { parse(element!!).asArray() }.getOrNull()
-    }
-}
 
 class GsonJsonInt(provider: GsonProvider, override val int: Int) : GsonJsonValue(JsonPrimitive(int), provider, int),
     JsonInt
@@ -60,6 +41,7 @@ class GsonJsonBoolean(provider: GsonProvider, override val boolean: Boolean) :
 class GsonJsonDateInput
 @JvmOverloads constructor(provider: GsonProvider, string: String? = null, date: Date? = null) :
     GsonJsonValue(null, provider, ""), JsonDate {
+
     init {
         if (string == null && date == null)
             throw IllegalArgumentException("Cannot create a JsonDate with both string and date object null!")
@@ -71,10 +53,28 @@ class GsonJsonDateInput
 
     override val string: String =
         string?.also { gsonProvider.dateFormatPattern.parse(string) } ?: gsonProvider.dateFormatPattern.format(date)
-    override val date = date ?: Optional.ofNullable(gsonProvider.dateFormatPattern)
-        .orElseThrow { JsonDate.MissingDateFormatException("No date format specified. Cannot parse date '$string'.Add it in your JsonProvider instance") }
-        .parse(string)
-    ?: throw JsonDate.InvalidDateStringException("Cannot parse date '$string' with the provided date pattern '${gsonProvider.dateFormatPattern.toPattern()}'")
+
+    override val date: Date = date
+        ?: gsonProvider.runCatching {
+            dateFormatPattern.parse(string)
+        }.onFailure {
+            throw JsonDate.InvalidDateStringException("Cannot parse date '$string' with the provided date pattern '${gsonProvider.dateFormatPattern.toPattern()}'")
+        }.getOrThrow()
+}
+
+class GsonJsonAny(
+    gsonProvider: GsonProvider,
+    element: JsonElement,
+    override val any: Any
+) : GsonJsonValue(element, gsonProvider, any), JsonAny {
+
+    override fun asObject(): JsonObject? {
+        return gsonProvider.runCatching { parse(element!!).asObject() }.getOrNull()
+    }
+
+    override fun asArray(): JsonArray? {
+        return gsonProvider.runCatching { parse(element!!).asArray() }.getOrNull()
+    }
 }
 
 class GsonJsonArray(gsonProvider: GsonProvider, private val gsonArray: com.google.gson.JsonArray) :

@@ -49,7 +49,7 @@ class GsonProvider @JvmOverloads constructor(
         return this
     }
 
-    fun registerExtensionClass(klass: Class<*>): JsonProvider {
+    override fun registerExtensionClass(klass: Class<*>): JsonProvider {
         val jsonPropertyName = JsonProvider.toSnakeCase(klass)
 
         extensionClasses[jsonPropertyName] = klass
@@ -71,17 +71,14 @@ class GsonProvider @JvmOverloads constructor(
         return this
     }
 
+
     override fun toJson(problem: Problem): String {
         return gson.toJson(problem, Problem::class.java)
     }
 
     override fun toJson(element: JsonValue): String {
-        return gson.toJson(element as GsonJsonValue)
-    }
-
-    override fun fromJson(str: String): Problem {
-        log.trace("fromJson in ${this::class.java.simpleName} implementation called with string $str");
-        return gson.runCatching { fromJson(str, Problem::class.java) }.getOrNull() ?: throw InvalidJsonStringException("Invalid Json string given: $str")
+        return gson.toJson((element as GsonJsonValue).element
+            ?: throw InvalidJsonValueException("$element is not an instance of ${GsonJsonValue::class.java.simpleName}"))
     }
 
     override fun toJsonObject(problem: Problem): JsonObject {
@@ -89,21 +86,14 @@ class GsonProvider @JvmOverloads constructor(
         return GsonJsonObject(this, gson.toJsonTree(problem, Problem::class.java) as com.google.gson.JsonObject)
     }
 
+    override fun fromJson(str: String): Problem {
+        log.trace("fromJson in ${this::class.java.simpleName} implementation called with string $str");
+        return gson.runCatching { fromJson(str, Problem::class.java) }.getOrNull() ?: throw InvalidJsonStringException("Invalid Json string given: $str")
+    }
+
     override val get: Gson
         get() = gson
 
-    override fun <T> fromJson(json: String, klass: Class<T>): T {
-        //val gsonElement = gson.fromJson(json, JsonElement::class.java)
-        // val jsonValue = parse(gsonElement)
-        return gson.fromJson(json, klass)
-    }
-
-    override fun <T> fromJson(json: JsonValue, klass: Class<T>): T {
-        //this.jsonValue = json
-        if (json !is GsonJsonValue)
-            throw IllegalArgumentException("json '$json' value must be of type GsonJsonValue")
-        return gson.fromJson(json.element, klass)
-    }
 
     override fun newValue(string: String): JsonString {
         return GsonJsonString(this, string)
@@ -132,8 +122,13 @@ class GsonProvider @JvmOverloads constructor(
         else parse(value)
     }
 
-    override fun newDateValue(dateString: String): JsonDate {
-        return GsonJsonDateInput(this, dateString, null)
+    override fun newDateValue(dateString: String): JsonDate? {
+        return kotlin.runCatching { GsonJsonDateInput(this, dateString, null) }
+            .onFailure {
+                it.printStackTrace()
+                log.warn("An exception occurred while trying to deserialize the string '$dateString' " +
+                        "with the date pattern '${dateFormatPattern.toPattern()}'.  ")
+            }.getOrNull()
     }
 
     override fun newValue(value: Date): JsonDate {
@@ -315,3 +310,17 @@ class ProblemTypeAdapter(private val provider: GsonProvider) : TypeAdapter<Probl
         return problem.build()
     }
 }
+
+
+//    override fun <T> fromJson(json: String, klass: Class<T>): T {
+//        //val gsonElement = gson.fromJson(json, JsonElement::class.java)
+//        // val jsonValue = parse(gsonElement)
+//        return gson.fromJson(json, klass)
+//    }
+//
+//    override fun <T> fromJson(json: JsonValue, klass: Class<T>): T {
+//        //this.jsonValue = json
+//        if (json !is GsonJsonValue)
+//            throw IllegalArgumentException("json '$json' value must be of type GsonJsonValue")
+//        return gson.fromJson(json.element, klass)
+//    }

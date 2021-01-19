@@ -16,25 +16,73 @@ import java.util.*
 * has its own helper methods to fully build a <code>Problem</code> instance.
  */
 interface JsonValue {
-    //val jsonString: String
-    val isObject: Boolean
-        get() = false
-    val isArray: Boolean
-        get() = false
-    val isPrimitive: Boolean
-        get() = false
 
+    /**
+     * Is this JsonValue a JsonObject?
+     */
+    val isObject: Boolean
+        get() = this is JsonObject
+
+    /**
+     * Is this JsonValue a JsonArray?
+     */
+    val isArray: Boolean
+        get() = this is JsonArray
+
+    /**
+     * Is this JsonValue one of the primitive types? ([JsonInt], [JsonDouble], ecc)
+     *
+     * Note that [JsonDate] is not a [JsonPrimitive].
+     */
+    val isPrimitive: Boolean
+        get() = this is JsonPrimitive && this !is JsonDate
+
+    /**
+     * @return this [JsonValue] object as a [JsonArray] or null if it is not a [JsonArray].
+     * @throws UnsupportedOperationException if the provider's implementation does not support this feature.
+     */
     fun asArray(): JsonArray? = throw UnsupportedOperationException("Not implemented")
+
+    /**
+     * @return this [JsonValue] object as a [JsonObject] or null if it is not a [JsonObject].
+     * @throws UnsupportedOperationException if the provider's implementation does not support this feature.
+     */
     fun asObject(): JsonObject? = throw UnsupportedOperationException("Not implemented")
 
+    /**
+     * The provider is the engine used to process and create json strings.
+     */
     val provider: JsonProvider
     val value: Any
     val properties: Properties
 
+    /**
+     * @return this [JsonValue] as a [JsonString] or null if it is not a [JsonString].
+     * @throws ClassCastException if this is not a [JsonString]
+     */
     fun asString() = runCatching { this as JsonString }.getOrElse { throw ClassCastException("Cannot cast a ${this::class.java.simpleName} instance to a JsonString object") }
+    /**
+     * @return this [JsonValue] as a [JsonInt] or null if it is not a [JsonInt].
+     * @throws ClassCastException if this is not a [JsonInt]
+     */
     fun asInt() = runCatching { this as JsonInt }.getOrElse { throw ClassCastException("Cannot cast a ${this::class.java.simpleName} instance to a JsonInt object") }
+
+    /**
+     * @return this [JsonValue] as a [JsonFloat] or null if it is not a [JsonFloat].
+     * @throws ClassCastException if this is not a [JsonFloat]
+     */
     fun asFloat() = runCatching { this as JsonFloat }.getOrElse { throw ClassCastException("Cannot cast a ${this::class.java.simpleName} instance to a JsonFloat object") }
+
+    /**
+     * @return this [JsonValue] as a [JsonDouble] or null if it is not a [JsonDouble].
+     * @throws ClassCastException if this is not a [JsonDouble]
+     */
     fun asDouble() = runCatching { this as JsonDouble }.getOrElse { throw ClassCastException("Cannot cast a ${this::class.java.simpleName} instance to a JsonDouble object") }
+
+    /**
+     * @return this [JsonValue] as a [JsonBoolean] or null if it is not a [JsonBoolean].
+     * @throws ClassCastException if this is not a [JsonBoolean]
+     */
     fun asBoolean() = runCatching { this as JsonBoolean }.getOrElse { throw ClassCastException("Cannot cast a ${this::class.java.simpleName} instance to a JsonBoolean object") }
 
     companion object {
@@ -53,24 +101,25 @@ interface JsonArray : JsonValue {
     val isEmpty: Boolean
     val asList: List<JsonValue>
 }
+interface JsonPrimitive : JsonValue
 
-interface JsonString : JsonValue {
+interface JsonString : JsonValue, JsonPrimitive {
     val string: String
 }
 
-interface JsonInt : JsonValue {
+interface JsonInt : JsonValue, JsonPrimitive {
     val int: Int
 }
 
-interface JsonFloat : JsonValue {
+interface JsonFloat : JsonValue, JsonPrimitive {
     val float: Float
 }
 
-interface JsonDouble : JsonValue {
+interface JsonDouble : JsonValue, JsonPrimitive {
     val double: Double
 }
 
-interface JsonBoolean : JsonValue {
+interface JsonBoolean : JsonValue, JsonPrimitive {
     val boolean: Boolean
 }
 
