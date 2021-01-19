@@ -5,7 +5,7 @@ import java.util.regex.Pattern
 import kotlin.reflect.KClass
 
 /**
- *  The provider of the JSON facilities. The default provider is GsonProvider.
+ *  The provider is the engine that performs the serialization/deserialization functions. The default provider is GsonProvider.
  */
 interface JsonProvider {
 
@@ -38,7 +38,7 @@ interface JsonProvider {
     /**
      * Deserialize the given JSON string into a [Problem] instance.
      *
-     * @param str The JSON string representing a JSON Object compliant with the [RFC 7807][https://tools.ietf.org/html/rfc7807]  specification
+     * @param str The JSON string representing a JSON Object compliant with the [RFC 7807](https://tools.ietf.org/html/rfc7807)  specification
      * @return The deserialized [Problem] instance.
      * @throws InvalidJsonStringException if the string is not a valid JSON object or if the string is not compliant with the [RFC 7807][https://tools.ietf.org/html/rfc7807]
      */

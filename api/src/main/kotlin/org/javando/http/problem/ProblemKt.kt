@@ -12,6 +12,9 @@ import java.util.*
 val log: Logger = LoggerFactory.getLogger(Problem::class.java)
 
 interface ProblemKt {
+    /**
+     * The problem
+     */
     val details: String?
     val title: String
     val status: HttpStatus
