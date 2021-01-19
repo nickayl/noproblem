@@ -98,7 +98,7 @@ val jsonString = problem.toJson()
 	"account_number":7699123
   }
  ```
-
+ 
 ## Customizing the JsonProvider
 
 ### -Handling dates
@@ -127,10 +127,13 @@ val provider = GsonProvider()
 	.registerExtensionClass("credit_info", CreditInfo::class.java) 
 ```
 
-### -Adding problem extension members
+## Adding additional data to the payload
+
+### - Extension members
 Extension members, [as defined in the  RFC 7807](https://tools.ietf.org/html/rfc7807#page-6) , are custom json properties that may be used to carry additional information to the API client: 
 ``` kotlin
 val creditInfo = CreditInfo(34.5f, "EUR")
+
 val p = Problem.wither(provider)  
     .withType(URI("https://www.myapi.com/errors/insufficient-credit.html"))  
     .withInstance(URI("/perform-transaction"))  
@@ -163,8 +166,8 @@ The output will be:
 
 ### Adding exception and stacktrace as extension members
 
-Althout it is not advisable to add the stacktrace of an occurred exception as a member extensions, it
-can be helpful when debugging a system. It should be avoided in production since exception messages and stacktraces ***contains information on the implementation's internals and therefore can expose your system to security threats***. **Use at your own risk.**
+Althout it is not advisable to add the stacktrace of an exception as a member extensions, it
+can be helpful when debugging a system. It should be avoided in production since exception messages and stacktraces ***contains information on the implementation's internals and therefore can expose your system to security threats***. ***Use at your own risk.***
 
 As stated in the [RFC 7807](https://tools.ietf.org/html/rfc7807#page-8) document:
 
@@ -185,11 +188,12 @@ val problemClassic = Problem.create(provider)
     .type(URI("https://www.javando.org/api/errors/authorization-write-error"))  
     .instance(URI("/write-to-database"))  
     .status(HttpStatus.FORBIDDEN)  
-    .addExtension(exception) 
+    .addExtension(exception) // 'exception' can be any exception type.
     .addExtension(exception.stackTrace, depth = 3, excludePackages = arrayOf("*junit*", "java.lang.*")) 
     .build()
 ```
-In the code example we have limited the stacktrace depth to only 5 elements and we have also excluded the packages that contains `junit` or starts with `java.lang.` The `*` can be used as an ant matcher. 
+In the code example we have limited the stacktrace depth to only 3 elements and we have also excluded the packages that contains `junit` or starts with `java.lang.` 
+The `*` can be used as an ant matcher. 
 An example output could be:
 ``` json
 {
