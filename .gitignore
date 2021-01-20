@@ -18,3 +18,5 @@
 /integration-test-project
 */target
 */legacy/
+MainKt.kt
+**/legacy/**

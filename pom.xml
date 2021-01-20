@@ -6,7 +6,7 @@
 
     <artifactId>no-problem</artifactId>
     <groupId>org.javando.http</groupId>
-    <version>1.0.RELEASE</version>
+    <version>1.1.RC1</version>
     <packaging>pom</packaging>
     <name>noproblem</name>
 
@@ -27,7 +27,8 @@
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
         <kotlin.code.style>official</kotlin.code.style>
         <kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
-        <library.version>1.0.RELEASE</library.version>
+        <library.version>1.1.RC1</library.version>
+        <dokka-version>1.4.10.2</dokka-version>
     </properties>
 
     <repositories>
@@ -43,7 +44,6 @@
             <url>https://dl.bintray.com/kotlin/kotlin-eap</url>
         </repository>
     </repositories>
-
     <pluginRepositories>
         <pluginRepository>
             <releases>
@@ -55,6 +55,11 @@
             <id>bintray.kotlin.eap</id>
             <name>Bintray Kotlin EAP Repository</name>
             <url>https://dl.bintray.com/kotlin/kotlin-eap</url>
+        </pluginRepository>
+        <pluginRepository>
+            <id>jcenter</id>
+            <name>JCenter</name>
+            <url>https://jcenter.bintray.com/</url>
         </pluginRepository>
     </pluginRepositories>
 
@@ -165,6 +170,26 @@
                 <plugin>
                     <artifactId>maven-failsafe-plugin</artifactId>
                     <version>2.22.2</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.jetbrains.dokka</groupId>
+                    <artifactId>dokka-maven-plugin</artifactId>
+                    <version>${dokka-version}</version>
+                    <executions>
+                        <execution>
+                            <phase>pre-site</phase>
+                            <goals>
+                                <goal>dokka</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                    <configuration>
+                        <jdkVersion>8</jdkVersion>
+                        <sourceDirectories>
+                            <dir>${project.basedir}/src/main/kotlin</dir>
+                            <dir>${project.basedir}/src/main/java</dir>
+                        </sourceDirectories>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>

@@ -10,10 +10,10 @@ import kotlin.reflect.KClass
 interface JsonProvider {
 
     /**
-     * Serialize the problem in a JSON Object that conforms to the [RFC 7807][https://tools.ietf.org/html/rfc7807] specification.
+     * Serialize the problem in a JSON Object that conforms to the [RFC 7807](https://tools.ietf.org/html/rfc7807) specification.
      *
      * @param problem the problem instance to be serialized
-     * @return The serialized problem in a JSON Object
+     * @return The serialized problem in a JSON Object string
      */
     fun toJson(problem: Problem): String
 
@@ -27,7 +27,7 @@ interface JsonProvider {
     fun toJson(element: JsonValue): String
 
     /**
-     * Serialize your problem into a provider-independent JSON Object.
+     * Serialize the given problem into a provider-independent JSON Object.
      *
      * See [JsonObject] for more information on how to extract json properties from this object
      * @param problem The problem to be serialized
