@@ -55,6 +55,7 @@ interface JsonValue {
     val provider: JsonProvider
     val value: Any
     val properties: Properties
+    var referencedProblem: Problem?
 
     /**
      * @return this [JsonValue] as a [JsonString] or null if it is not a [JsonString].

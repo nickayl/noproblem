@@ -84,6 +84,7 @@ class GsonProvider @JvmOverloads constructor(
     override fun toJsonObject(problem: Problem): JsonObject {
         //val jsonString = gson.toJson(problem, Problem::class.java)
         return GsonJsonObject(this, gson.toJsonTree(problem, Problem::class.java) as com.google.gson.JsonObject)
+            .apply { referencedProblem = problem }
     }
 
     override fun fromJson(str: String): Problem {
@@ -189,7 +190,7 @@ class GsonProvider @JvmOverloads constructor(
     internal fun parse(element: JsonElement, name: String? = null): JsonValue {
         val cannotParseException = IllegalArgumentException("Cannot parse json element $element")
 
-        return when (element) {
+        val jv = when (element) {
             is com.google.gson.JsonObject -> GsonJsonObject(this, element)
             is com.google.gson.JsonArray -> GsonJsonArray(this, element)
             is com.google.gson.JsonPrimitive ->
@@ -214,6 +215,7 @@ class GsonProvider @JvmOverloads constructor(
                 }
             else -> throw  cannotParseException
         }
+        return jv.apply {  }
     }
 }
 
@@ -291,19 +293,22 @@ class ProblemTypeAdapter(private val provider: GsonProvider) : TypeAdapter<Probl
             .withStatus(status)
 
         val keys = obj.keySet()
+        val jsonValues: MutableList<in JsonValue> = mutableListOf()
 
         keys.filter { it !in reserved }.forEach {
             if (!provider.extensionClasses.containsKey(it)) {
                 val element = obj.get(it)
-                problem.addExtensions(Pair(it, provider.parse(element, it)))
+                val jsonValue = provider.parse(element, it).also(jsonValues::add)
+                problem.addExtensions(Pair(it, jsonValue))
             } else
                 provider.runCatching {
                     val d = tryDeserialize(obj.get(it), provider.extensionClasses[it]!!)
-                    problem.addExtensions(Pair(it, d))
+                    problem.addExtensions(Pair(it, d.also(jsonValues::add)))
                 }.getOrElse { _ ->
                     log.warn("Failed deserialization of json value '$it'")
                     val element = obj.get(it)
-                    problem.addExtensions(Pair(it, provider.parse(element, it)))
+                    val jsonValue = provider.parse(element, it).also(jsonValues::add)
+                    problem.addExtensions(Pair(it, jsonValue))
                 }
         }
 

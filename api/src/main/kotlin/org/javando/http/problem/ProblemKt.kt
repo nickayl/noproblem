@@ -37,6 +37,8 @@ abstract class ProblemBuilder(protected val jsonProvider: JsonProvider) {
     protected var instance: URI? = null
     protected var type: URI = URI("about:blank")
 
+    private val reservedKeywords = listOf("title", "details", "status", "instance", "type", "stacktrace", "exceptions")
+
     @Transient
     protected val extensions = mutableMapOf<String, JsonValue>()
 
@@ -73,12 +75,12 @@ abstract class ProblemBuilder(protected val jsonProvider: JsonProvider) {
         val mutable = pairs.toMutableList()
 
         mutable.removeIf {
-            if (it.first == "stacktrace")
+            if (it.first in reservedKeywords)
                 log.warn("Found custom '${it.first}' extension: It is a reserved keyword and will not be added.")
-            it.first == "stacktrace"
+            it.first in reservedKeywords
         }
 
-        this.extensions.putAll(mutable)
+        mutable.forEach { addExtensionInternal(it.first, it.second) }
         return this
     }
 
@@ -88,17 +90,13 @@ abstract class ProblemBuilder(protected val jsonProvider: JsonProvider) {
     open fun addExtension(name: String, value: Boolean) = addExtensionInternal(name, jsonProvider.newValue(value))
     open fun addExtension(name: String, value: Double) = addExtensionInternal(name, jsonProvider.newValue(value))
     open fun addExtension(name: String, value: Date) = addExtensionInternal(name, jsonProvider.newValue(value))
-    open fun addExtension(name: String, value: Any) = addExtensionInternal(name, jsonProvider.newValue(value))
-    open fun addExtension(exception: Throwable) = addExtensionInternal("exceptions", jsonProvider.newValue(exception))
     open fun addExtension(name: String, value: ZonedDateTime) = addExtension(name, Date.from(value.toInstant()))
     open fun addExtension(name: String, value: LocalDateTime) = addExtension(name, value.atZone(ZoneId.systemDefault()))
+    open fun addExtension(name: String, value: Any) = addExtensionInternal(name, jsonProvider.newValue(value))
+    open fun addExtension(exception: Throwable) = addExtensionInternal("exceptions", jsonProvider.newValue(exception))
 
     @JvmOverloads
-    open fun addExtension(
-        value: Array<StackTraceElement>,
-        depth: Int = 10,
-        vararg excludePackages: String = arrayOf()
-    ): ProblemBuilder {
+    open fun addExtension(value: Array<StackTraceElement>, depth: Int = 10, vararg excludePackages: String = arrayOf()): ProblemBuilder {
         val ps = Properties()
         ps[JsonValue.stacktracePropertyKeyDepth] = if(depth < 0) 1 else depth
         ps[JsonValue.stacktracePropertyKeyExcludedPackages] = excludePackages.toMutableList().apply { addAll(listOf("jdk.*", "java.lang.reflect.*")) }
@@ -116,6 +114,7 @@ abstract class ProblemBuilder(protected val jsonProvider: JsonProvider) {
         pairs.forEach { addExtensionInternal(it.first, it.second) }
         return this
     }
+
 
     abstract fun build(): Problem
     override fun toString() =

@@ -9,13 +9,14 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.assertThrows
 import org.slf4j.LoggerFactory
 import java.lang.Exception
 import java.net.MalformedURLException
 import java.net.URI
 import java.net.URL
+import java.time.Instant
 import java.util.*
+import kotlin.time.milliseconds
 
 //@TestInstance(value = TestInstance.Lifecycle.PER_CLASS)
 internal class GsonProviderTest {
@@ -24,8 +25,8 @@ internal class GsonProviderTest {
     private lateinit var testProblemBuilder: ProblemBuilderClassic
     private val log = LoggerFactory.getLogger(GsonProviderTest::class.java)
 
-    private data class CreditInfo(val balance: Double, val currency: String = "EUR")
     private data class CreditInfo22(val balance2: Double, val currency: String = "EUR")
+    private data class CreditInfo(val balance: Double, val currency: String = "EUR")
 
     @BeforeEach
     fun setUp() {
@@ -85,84 +86,6 @@ internal class GsonProviderTest {
         assertTrue(providerGson.dateIdentifier == "myDate")
     }
 
-    @Test
-    fun addStacktraceDepth() {
-        try {
-            testProblem.extensions["ciao"]!!.asArray()
-        } catch (e: Exception) {
-            val p = testProblemBuilder.addExtension(e.stackTrace, depth = 3).build()
-            assertFalse(p.extensions.isEmpty())
-            assertTrue(p.extensions.containsKey("stacktrace"))
-            assertTrue(p.extensions["stacktrace"]!!.isArray)
-            val array = p.extensions["stacktrace"]!!.asArray()!!
-            assertFalse(array.isEmpty)
-            assertTrue(array.size == 3)
-        }
-    }
-
-    @Test
-    fun addStacktraceWithAllParams() {
-        try {
-            testProblem.extensions["ciao"]!!.asArray()
-        } catch (e: Exception) {
-            val p = testProblemBuilder.addExtension(
-                e.stackTrace,
-                depth = 5,
-                excludePackages = arrayOf("*junit*", "java.lang.*")
-            ).build()
-            assertFalse(p.extensions.isEmpty())
-            assertTrue(p.extensions.containsKey("stacktrace"))
-            assertEquals(2, p.extensions["stacktrace"]!!.properties.size)
-            assertEquals(5, p.extensions["stacktrace"]!!.properties[JsonValue.stacktracePropertyKeyDepth] as Int)
-            assertNotNull(p.extensions["stacktrace"]!!.properties[JsonValue.stacktracePropertyKeyExcludedPackages] as? List<String>)
-            assertTrue(p.extensions["stacktrace"]!!.isArray)
-            val array = p.extensions["stacktrace"]!!.asArray()!!
-            assertFalse(array.isEmpty)
-            assertTrue(array.size <= 5)
-
-            array.asList.forEachIndexed { index, value ->
-                val obj = array.readValue(index, JsonObject::class.java)
-                assertNotNull(obj)
-                val defClass = obj!!.readValue("declaringClass", String::class.java)
-                assertNotNull(defClass)
-                assertFalse(defClass!!.contains("junit."))
-                assertFalse(defClass.contains("jdk."))
-            }
-
-            val gsonString = p.toJson()
-            // println(gsonString)
-        }
-    }
-
-    @Test
-    fun addException() {
-        try {
-            //val url = URL("http//wrongurl")
-            throw RuntimeException("This is my text!\"")
-
-        } catch (e: Exception) {
-            //e.printStackTrace()
-            val p = testProblemBuilder.addExtension(e).build()
-            assertFalse(p.extensions.isEmpty())
-            assertTrue(p.extensions.containsKey("exceptions"))
-            assertTrue(p.extensions["exceptions"]!!.isArray)
-
-            val array = p.extensions["exceptions"]!!.asArray()!!
-            assertFalse(array.isEmpty)
-            array.asList.forEachIndexed { index, _ ->
-                val obj = array.readValue(index, JsonObject::class.java)
-                assertNotNull(obj)
-                val defClass = obj!!.readValue("klass", String::class.java)
-                val message = obj.readValue("message", String::class.java)
-
-                assertNotNull(defClass)
-                assertNotNull(message)
-            }
-
-            val gsonString = p.toJson()
-            //println(gsonString)
-        }
-    }
 
     @Test
     fun integrateAll() {
@@ -181,6 +104,7 @@ internal class GsonProviderTest {
             val pr = testProblemBuilder.build()
             assertNotNull(pr.extensions)
             assertFalse(pr.extensions.isEmpty())
+            pr.extensions.forEach { assertNotNull(it.value.referencedProblem) }
             assertTrue(pr.extensions.containsKey("exceptions"))
             assertTrue(pr.extensions.containsKey("stacktrace"))
 
@@ -192,59 +116,6 @@ internal class GsonProviderTest {
 
             println(pr.toJson())
         }
-    }
-
-    @Test
-    fun getExtensionValueTestShouldGiveNull() {
-
-        val creditInfo = testProblem.getExtensionValue("credit_info", CreditInfo::class.java)
-        assertNull(creditInfo)
-
-        val creditInfoObj = testProblem.getExtensionValue("credit_info", JsonObject::class.java)
-        assertNotNull(creditInfoObj)
-    }
-
-    @Test
-    fun getExtensionValueTestsShouldPass() {
-
-        provider.registerExtensionClass(CreditInfo::class.java)
-
-        val problem = testProblemBuilder
-            .addExtension("credit_info", CreditInfo(34.5, "EUR"))
-            .addExtension("credit_info2", CreditInfo22(39.5, "GBP"))
-            .addExtension("currencies", Currency.getAvailableCurrencies())
-            .build()
-
-        val creditInfo = problem.getExtensionValue("credit_info", CreditInfo::class.java)
-        assertNotNull(creditInfo)
-
-        val creditInfoTris = problem.getExtensionValue("credit_info", JsonObject::class.java)
-        assertNotNull(creditInfoTris)
-        val balance = creditInfoTris!!.readValue("balance", Float::class.java)
-        val cur = creditInfoTris.readValue("currency", String::class.java)
-        assertNotNull(balance)
-        assertEquals(34.5f, balance)
-        assertEquals("EUR", cur)
-
-        val creditInfoBis = problem.getExtensionValue(CreditInfo::class.java)
-        assertNotNull(creditInfoBis)
-        assertEquals(creditInfo, creditInfoBis)
-
-        val jV = problem.getExtensionValue("credit_info2", JsonValue::class.java)
-        assertNotNull(jV)
-        val obj = jV?.asObject()
-        assertNotNull(obj)
-
-        val value = obj?.readValue("balance2", Float::class.java)
-        assertNotNull(value)
-        assertTrue(value is Float)
-        assertEquals(value, 39.5f)
-
-        //val type: Class<out Set<Currency>> = mutableSetOf<Currency>()::class.java
-        val curs = problem.getExtensionValue("currencies", JsonArray::class.java)
-        assertNotNull(curs)
-        assertFalse(curs!!.isEmpty)
-        //println("All currencies are $curs")
     }
 
     @Test
@@ -278,39 +149,6 @@ internal class GsonProviderTest {
         assertTrue(newDate.date == date && !newDate.isPrimitive)
         assertFalse(newDate.isObject || newDate.isArray)
 
-    }
-
-    @Test
-    fun toJsonObject() {
-        val problem = testProblem
-        val obj = provider.toJsonObject(problem)
-
-        assertNotNull(obj)
-        assertTrue(obj.isObject && !obj.isPrimitive && !obj.isArray)
-
-        val title = obj.readValue("title", String::class.java)
-        val details = obj.readValue("details", String::class.java)
-        val instanceString = obj.readValue("instance", String::class.java)
-        val typeString = obj.readValue("type", String::class.java)
-        val status = obj.readValue("status", Int::class.java)
-
-        assertThat(title, allOf(not(nullValue()), not(equalTo("")), equalTo(problem.title)))
-        assertThat(details, allOf(not(nullValue()), not(equalTo("")), equalTo(problem.details)))
-        assertThat(typeString, allOf(not(nullValue()), not(equalTo("")), equalTo(problem.type.toString())))
-        assertThat(instanceString, allOf(not(nullValue()), not(equalTo("")), equalTo(problem.instance!!.toString())))
-        assertTrue(status == 200)
-
-        assertEquals(title!!::class.java, String::class.java)
-        assertEquals(details!!::class.java, String::class.java)
-        assertEquals(instanceString!!::class.java, String::class.java)
-        assertEquals(typeString!!::class.java, String::class.java)
-        //assertEquals(status!!::class.java, Int::class.java)
-
-        val typeUri = URI.create(obj.readValue("type", String::class.java)!!)
-        val instanceUri = URI.create(obj.readValue("instance", String::class.java)!!)
-
-        assertEquals(typeUri, problem.type)
-        assertEquals(instanceUri, problem.instance)
     }
 
 

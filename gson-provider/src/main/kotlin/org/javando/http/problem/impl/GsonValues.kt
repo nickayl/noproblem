@@ -15,6 +15,7 @@ abstract class GsonJsonValue @JvmOverloads constructor(
 
     override val provider: JsonProvider = gsonProvider
     override val properties: Properties = Properties()
+    override var referencedProblem: Problem? = null
 
     //override val jsonString = provider.toJson(element)
 
@@ -93,7 +94,12 @@ class GsonJsonArray(gsonProvider: GsonProvider, private val gsonArray: com.googl
         return gsonArray
             .runCatching { get(position) }
             .getOrNull()
-            ?.let { parseValue(klass, it, gsonProvider) }
+            ?.let {
+                if (klass in gsonProvider.extensionClasses.values) {
+                    referencedProblem?.getExtensionValue(klass)
+                } else
+                    parseValue(klass, it, gsonProvider)
+            }
     }
 
     internal fun removeValue(position: Int) {
@@ -121,7 +127,14 @@ class GsonJsonObject(provider: GsonProvider, private val gsonObject: com.google.
     override fun asObject(): JsonObject = this
 
     override fun <T> readValue(name: String, klass: Class<T>): T? {
-        return gsonObject.get(name)?.let { parseValue(klass, it, gsonProvider) }
+        return gsonObject
+            .get(name)
+            ?.let {
+                if (klass in gsonProvider.extensionClasses.values) {
+                    referencedProblem?.getExtensionValue(klass)
+                } else
+                    parseValue(klass, it, gsonProvider)
+            }
     }
 
     override fun toString(): String {
@@ -141,7 +154,9 @@ fun <T> GsonJsonValue.parseValue(klass: Class<T>, value: JsonElement, gsonProvid
                 .getOrNull()
             JsonObject::class.java -> value.runCatching { GsonJsonObject(gsonProvider, this.asJsonObject) as T }
                 .getOrNull()
-            else -> throw IllegalArgumentException("$klass is incompatible with the object '$value'")
+            else ->
+                throw IllegalArgumentException("$klass is incompatible with the object '$value'")
+
         }
     } catch (e: Exception) {
         throw ClassCastException(e.message)

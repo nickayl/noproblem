@@ -75,8 +75,10 @@ internal class ProblemReferenceImplementation @JvmOverloads constructor(
 
 
             return ProblemReferenceImplementation(title!!, type, status!!, details, instance, jsonProvider)
-                .apply {
+                .apply problem@ {
+                    super.extensions.forEach { it.value.apply { referencedProblem = this@problem} }
                     this._internalExtensions.putAll(super.extensions)
+                    println()
                 }
         }
     }
