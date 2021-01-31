@@ -560,12 +560,12 @@ abstract class ProblemBuilder(protected val jsonProvider: JsonProvider) {
         return this
     }
 
-
     /**
      * @return the newly created Problem instance.
-     * @throws ProblemBuilderException If all the required fields has not been filled or for other related problems.
+     * @throws ProblemBuilderException If all the required fields has not been filled or if any other error occur.
      */
     abstract fun build(): Problem
+
     override fun toString() =
         "ProblemBuilder(jsonProvider=$jsonProvider, details=$details, title=$title, status=$status, instance=$instance, type=$type, extensions=$extensions)"
 }

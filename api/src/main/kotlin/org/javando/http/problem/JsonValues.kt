@@ -100,7 +100,7 @@ interface JsonValue {
 
 /**
  * The [JsonObject] class abstracts the JSON objects from the provider's implementation
- * and offers a clean API to access to its internal elements
+ * and offers a clean API to access its internal elements
  */
 interface JsonObject : JsonValue {
     /**
