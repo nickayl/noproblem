@@ -1,7 +1,6 @@
 # NoProblem - HTTP APIs error messages made easy
-[![](https://jitpack.io/v/cyclonesword/noproblem.svg)](https://jitpack.io/#cyclonesword/noproblem) 
-[![](https://badgen.net/badge/java/8+/green)](https://jitpack.io/#cyclonesword/noproblem)
-[![](https://badgen.net/badge/kotlin/1.3+/green)](https://jitpack.io/#cyclonesword/noproblem)
+[![](https://badgen.net/badge/java/8+/green)]()
+[![](https://badgen.net/badge/kotlin/1.3+/green)]()
 [![](https://badgen.net/badge/license/Apache%202.0/blue)](https://github.com/cyclonesword/noproblem/blob/master/README.md)
 <br>
 Handle your API endpoints errors in  a ****JSON**  Object** using the **[RFC 7807](https://tools.ietf.org/html/rfc7807)** standard format.
