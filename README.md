@@ -30,9 +30,9 @@ allprojects {
 
 Then, add the dependency to your project-local build.gradle :
 ``` groovy
-implementation 'org.javando.http:no-problem-api:1.1.RC1'
+implementation 'com.github.cyclonesword.noproblem:no-problem-api:1.1.RELEASE'
 /* Gson provider or another of your preference */
- implementation 'org.javando.http:gson-provider:1.1.RC1'
+ implementation 'com.github.cyclonesword.noproblem:gson-provider:1.1.RELEASE'
 ```
 #### Maven
 First you have to add the jitpack repository to your pom.xml file:
@@ -47,16 +47,16 @@ First you have to add the jitpack repository to your pom.xml file:
 Then add the dependency inside the `<dependencies>` tag:
 ``` xml
 <dependency>
-	<groupId>org.javando.http</groupId>
-	<artifactId>no-problem-api</artifactId>
-	<version>1.1.RC1</version>
-</dependency>  
+    <groupId>com.github.cyclonesword.noproblem</groupId>
+    <artifactId>no-problem-api</artifactId>
+    <version>1.1.RELEASE</version>
+</dependency> 
   
 <!-- Gson provider or another of your preference -->  
 <dependency>
-	<groupId>org.javando.http</groupId>
-	<artifactId>gson-provider</artifactId>
-	<version>1.1.RC1</version>
+    <groupId>com.github.cyclonesword.noproblem</groupId>
+    <artifactId>gson-provider</artifactId>
+    <version>1.1.RELEASE</version>
 </dependency>
 ```
 

@@ -6,7 +6,7 @@
 
     <artifactId>no-problem</artifactId>
     <groupId>org.javando.http</groupId>
-    <version>1.1.RC1</version>
+    <version>1.1.RELEASE</version>
     <packaging>pom</packaging>
     <name>noproblem</name>
 
@@ -27,7 +27,7 @@
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
         <kotlin.code.style>official</kotlin.code.style>
         <kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
-        <library.version>1.1.RC1</library.version>
+        <library.version>1.1.RELEASE</library.version>
         <dokka-version>1.4.10.2</dokka-version>
     </properties>
 
