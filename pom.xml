@@ -63,13 +63,13 @@
         </pluginRepository>
     </pluginRepositories>
 
-    <distributionManagement>
-        <repository>
-            <id>github</id>
-            <name>GitHub cyclonesword Apache Maven Packages</name>
-            <url>https://maven.pkg.github.com/cyclonesword/noproblem</url>
-        </repository>
-    </distributionManagement>
+<!--    <distributionManagement>-->
+<!--        <repository>-->
+<!--            <id>github</id>-->
+<!--            <name>GitHub cyclonesword Apache Maven Packages</name>-->
+<!--            <url>https://maven.pkg.github.com/cyclonesword/noproblem</url>-->
+<!--        </repository>-->
+<!--    </distributionManagement>-->
 
     <dependencyManagement>
         <dependencies>
